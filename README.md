@@ -96,32 +96,16 @@ Every PR merged to `main` automatically triggers a GitHub Actions workflow that:
 
 ### Installing a Release (Client Instructions)
 
-Since the repo is private, clients need a **fine-grained GitHub personal access token** to download releases.
-
-**Create a token:**
-
-1. Go to GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens
-2. Click **Generate new token**
-3. Set **Resource owner** to the repo owner (`benatwork`)
-4. Under **Repository access**, select only `verified-answers-wordpress`
-5. Under **Permissions → Repository permissions**, set **Contents** to `Read-only`
-6. Generate and copy the token
-
-**Download a release zip:**
+**Download the latest release zip:**
 
 ```bash
-# Replace YOUR_TOKEN and the version tag as needed
 curl -L \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Accept: application/octet-stream" \
-  "$(curl -s \
-    -H 'Authorization: Bearer YOUR_TOKEN' \
-    'https://api.github.com/repos/benatwork/verified-answers-wordpress/releases/latest' \
+  "$(curl -s 'https://api.github.com/repos/benatwork/answers-wordpress/releases/latest' \
     | grep '"browser_download_url"' | cut -d'"' -f4)" \
   -o verified-answers-faq.zip
 ```
 
-Or navigate directly to the [Releases page](https://github.com/benatwork/verified-answers-wordpress/releases) while logged in to GitHub with an account that has repo access and download the zip manually.
+Or download directly from the [Releases page](https://github.com/benatwork/answers-wordpress/releases).
 
 **Install in WordPress:**
 
@@ -129,7 +113,9 @@ Or navigate directly to the [Releases page](https://github.com/benatwork/verifie
 2. Choose `verified-answers-faq.zip` and click **Install Now**
 3. Activate the plugin
 
-To update an existing installation, upload the new zip — WordPress will prompt you to replace the current version.
+### Auto-updates
+
+The plugin checks for new releases automatically. When a new version is published, a standard WordPress update notice appears in **Plugins → Installed Plugins** — no configuration required.
 
 ## Architecture
 

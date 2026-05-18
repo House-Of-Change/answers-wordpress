@@ -78,16 +78,10 @@ jobs:
 
             ## Install this release
 
-            Download with a fine-grained GitHub token scoped to this repo (`Contents: Read`):
-
             ```bash
             curl -L \
-              -H "Authorization: Bearer YOUR_TOKEN_HERE" \
-              -H "Accept: application/octet-stream" \
-              "https://api.github.com/repos/${{ github.repository }}/releases/assets/$(curl -s \
-                -H 'Authorization: Bearer YOUR_TOKEN_HERE' \
-                'https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ steps.version.outputs.tag }}' \
-                | grep -o '"id":[0-9]*' | head -1 | grep -o '[0-9]*')" \
+              "$(curl -s 'https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ steps.version.outputs.tag }}' \
+                | grep '"browser_download_url"' | cut -d'"' -f4)" \
               -o verified-answers-faq.zip
             ```
 
