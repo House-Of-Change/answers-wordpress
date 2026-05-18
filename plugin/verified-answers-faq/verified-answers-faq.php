@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Verified Answers FAQ
+ * Plugin Name: Answers by info.link
  * Description: Renders FAQ content server-side for SEO and LLM crawlability. Supports WooCommerce product tabs, shortcodes, and automatic content injection.
  * Version: 1.0.0
  * Plugin URI: https://github.com/benatwork/answers-wordpress

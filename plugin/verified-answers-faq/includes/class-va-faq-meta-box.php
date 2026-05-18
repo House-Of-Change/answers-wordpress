@@ -17,7 +17,7 @@ class VA_FAQ_Meta_Box {
         foreach ( $post_types as $post_type ) {
             add_meta_box(
                 'va_faq_set_id',
-                'Verified Answers FAQ',
+                'Answers by info.link',
                 [ __CLASS__, 'render_meta_box' ],
                 $post_type,
                 'side',

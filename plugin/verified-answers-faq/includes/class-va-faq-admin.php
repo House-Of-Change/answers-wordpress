@@ -13,8 +13,8 @@ class VA_FAQ_Admin {
 
     public static function add_settings_page(): void {
         add_options_page(
-            'Verified Answers FAQ',
-            'Verified Answers FAQ',
+            'Answers by info.link',
+            'Answers by info.link',
             'manage_options',
             'va-faq-settings',
             [ __CLASS__, 'render_settings_page' ]
@@ -93,7 +93,7 @@ class VA_FAQ_Admin {
         }
         ?>
         <div class="wrap">
-            <h1>Verified Answers FAQ Settings</h1>
+            <h1>Answers by info.link Settings</h1>
             <form action="options.php" method="post">
                 <?php
                 settings_fields( 'va_faq_settings' );

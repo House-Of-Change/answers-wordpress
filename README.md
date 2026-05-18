@@ -1,4 +1,4 @@
-# Verified Answers — WordPress/WooCommerce Integration
+# Answers by info.link — WordPress/WooCommerce Integration
 
 A WordPress plugin that renders FAQ content server-side for SEO and LLM crawlability. Includes a Docker-based local development environment with WooCommerce, sample products, and sample FAQ data.
 
@@ -67,7 +67,7 @@ plugin/verified-answers-faq/
 │   ├── class-va-faq-renderer.php       # HTML output + JSON-LD structured data
 │   ├── class-va-faq-hooks.php          # Auto-injection via WordPress/WooCommerce hooks
 │   ├── class-va-faq-shortcode.php      # [verified_answers_faq] shortcode
-│   ├── class-va-faq-admin.php          # Settings page (Settings > Verified Answers FAQ)
+│   ├── class-va-faq-admin.php          # Settings page (Settings > Answers by info.link)
 │   └── class-va-faq-meta-box.php       # Per-post/product FAQ set ID selector
 ├── data/
 │   └── sample-faqs.json               # Hardcoded FAQ sets keyed by set ID
@@ -79,7 +79,7 @@ plugin/verified-answers-faq/
 
 When the platform's publish REST API is ready, the switch requires no code changes:
 
-1. Go to **Settings > Verified Answers FAQ** in WP Admin
+1. Go to **Settings > Answers by info.link** in WP Admin
 2. Enter the **API URL** and **API Key**
 3. The data provider automatically fetches from the API instead of the local JSON file, with transient caching (configurable TTL)
 
