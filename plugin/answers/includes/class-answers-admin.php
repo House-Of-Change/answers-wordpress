@@ -13,8 +13,8 @@ class Answers_Admin {
 
     public static function add_settings_page(): void {
         add_options_page(
-            'Answers by info.link',
-            'Answers by info.link',
+            'Answers',
+            'Answers',
             'manage_options',
             'answers-settings',
             [ __CLASS__, 'render_settings_page' ]
@@ -93,7 +93,7 @@ class Answers_Admin {
         }
         ?>
         <div class="wrap">
-            <h1>Answers by info.link Settings</h1>
+            <h1>Answers Settings</h1>
             <form action="options.php" method="post">
                 <?php
                 settings_fields( 'answers_settings' );

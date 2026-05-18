@@ -1,4 +1,4 @@
-# Answers by info.link — WordPress/WooCommerce Integration
+# Answers – AI Search GEO AEO Plugin — WordPress/WooCommerce Integration
 
 A WordPress plugin that renders FAQ content server-side for SEO and LLM crawlability. Includes a Docker-based local development environment with WooCommerce, sample products, and sample FAQ data.
 

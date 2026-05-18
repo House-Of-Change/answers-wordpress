@@ -17,7 +17,7 @@ class Answers_Meta_Box {
         foreach ( $post_types as $post_type ) {
             add_meta_box(
                 'answers_set_id',
-                'Answers by info.link',
+                'Answers',
                 [ __CLASS__, 'render_meta_box' ],
                 $post_type,
                 'side',

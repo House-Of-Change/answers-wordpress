@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Answers by info.link
+ * Plugin Name: Answers – AI Search GEO AEO Plugin
  * Description: Renders FAQ content server-side for SEO and LLM crawlability. Supports WooCommerce product tabs, shortcodes, and automatic content injection.
  * Version: 1.0.0
  * Plugin URI: https://github.com/benatwork/answers-wordpress
