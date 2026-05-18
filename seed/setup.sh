@@ -32,8 +32,8 @@ wp core install \
 echo "Installing and activating WooCommerce..."
 wp plugin install woocommerce --activate --path="$WP_PATH"
 
-echo "Activating Verified Answers FAQ plugin..."
-wp plugin activate verified-answers-faq --path="$WP_PATH"
+echo "Activating Answers plugin..."
+wp plugin activate answers --path="$WP_PATH"
 
 echo "Installing and activating Storefront theme..."
 wp theme install storefront --activate --path="$WP_PATH"
@@ -80,7 +80,7 @@ BLUE_ID=$(wp wc product create \
     --porcelain \
     --path="$WP_PATH")
 echo "Created Blue Snowboard (ID: $BLUE_ID)"
-wp post meta update "$BLUE_ID" _va_faq_set_id "blue-snowboard-faqs" --path="$WP_PATH"
+wp post meta update "$BLUE_ID" _answers_set_id "blue-snowboard-faqs" --path="$WP_PATH"
 
 # Red Snowboard
 RED_ID=$(wp wc product create \
@@ -95,7 +95,7 @@ RED_ID=$(wp wc product create \
     --porcelain \
     --path="$WP_PATH")
 echo "Created Red Snowboard (ID: $RED_ID)"
-wp post meta update "$RED_ID" _va_faq_set_id "red-snowboard-faqs" --path="$WP_PATH"
+wp post meta update "$RED_ID" _answers_set_id "red-snowboard-faqs" --path="$WP_PATH"
 
 # Green Jacket
 GREEN_ID=$(wp wc product create \
@@ -110,7 +110,7 @@ GREEN_ID=$(wp wc product create \
     --porcelain \
     --path="$WP_PATH")
 echo "Created Green Jacket (ID: $GREEN_ID)"
-wp post meta update "$GREEN_ID" _va_faq_set_id "green-jacket-faqs" --path="$WP_PATH"
+wp post meta update "$GREEN_ID" _answers_set_id "green-jacket-faqs" --path="$WP_PATH"
 
 echo "Creating landing pages..."
 
@@ -124,7 +124,7 @@ SHIPPING_ID=$(wp post create \
     --porcelain \
     --path="$WP_PATH")
 echo "Created Shipping & Returns page (ID: $SHIPPING_ID)"
-wp post meta update "$SHIPPING_ID" _va_faq_set_id "returns-shipping" --path="$WP_PATH"
+wp post meta update "$SHIPPING_ID" _answers_set_id "returns-shipping" --path="$WP_PATH"
 
 # About Our Store page (with shortcode)
 ABOUT_ID=$(wp post create \
@@ -135,7 +135,7 @@ ABOUT_ID=$(wp post create \
 
 <p>Have questions? Check out our FAQ below:</p>
 
-[verified_answers_faq set="general-store-faqs" heading="Store FAQ"]' \
+[answers set="general-store-faqs" heading="Store FAQ"]' \
     --post_status=publish \
     --porcelain \
     --path="$WP_PATH")

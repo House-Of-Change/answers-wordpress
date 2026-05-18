@@ -4,11 +4,8 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-class VA_FAQ_Renderer {
+class Answers_Renderer {
 
-    /**
-     * Render FAQ HTML using <details>/<summary> accordion with Schema.org microdata.
-     */
     public static function render_html( array $faqs, array $attrs = [] ): string {
         if ( empty( $faqs ) ) {
             return '';
@@ -25,21 +22,21 @@ class VA_FAQ_Renderer {
 
         ob_start();
         ?>
-        <section class="va-faq-section" itemscope itemtype="https://schema.org/FAQPage">
+        <section class="answers-section" itemscope itemtype="https://schema.org/FAQPage">
             <?php if ( ! empty( $heading ) ) : ?>
-                <<?php echo $heading_tag; ?> class="va-faq-heading"><?php echo esc_html( $heading ); ?></<?php echo $heading_tag; ?>>
+                <<?php echo $heading_tag; ?> class="answers-heading"><?php echo esc_html( $heading ); ?></<?php echo $heading_tag; ?>>
             <?php endif; ?>
 
             <?php foreach ( $faqs as $faq ) : ?>
-                <div class="va-faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+                <div class="answers-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
                     <details>
                         <summary itemprop="name"><?php echo esc_html( $faq['question'] ); ?></summary>
-                        <div class="va-faq-answer" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+                        <div class="answers-answer" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
                             <div itemprop="text">
                                 <?php echo wp_kses_post( $faq['answer'] ); ?>
                             </div>
                             <?php if ( $show_source && ! empty( $faq['source'] ) ) : ?>
-                                <cite class="va-faq-source">Source: <?php echo esc_html( $faq['source'] ); ?></cite>
+                                <cite class="answers-source">Source: <?php echo esc_html( $faq['source'] ); ?></cite>
                             <?php endif; ?>
                         </div>
                     </details>
@@ -50,9 +47,6 @@ class VA_FAQ_Renderer {
         return ob_get_clean();
     }
 
-    /**
-     * Render JSON-LD structured data for FAQPage schema.
-     */
     public static function render_jsonld( array $faqs ): string {
         if ( empty( $faqs ) ) {
             return '';

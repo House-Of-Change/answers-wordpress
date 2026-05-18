@@ -4,7 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-class VA_FAQ_Meta_Box {
+class Answers_Meta_Box {
 
     public static function init(): void {
         add_action( 'add_meta_boxes', [ __CLASS__, 'add_meta_box' ] );
@@ -16,7 +16,7 @@ class VA_FAQ_Meta_Box {
 
         foreach ( $post_types as $post_type ) {
             add_meta_box(
-                'va_faq_set_id',
+                'answers_set_id',
                 'Answers by info.link',
                 [ __CLASS__, 'render_meta_box' ],
                 $post_type,
@@ -27,15 +27,15 @@ class VA_FAQ_Meta_Box {
     }
 
     public static function render_meta_box( $post ): void {
-        $value = get_post_meta( $post->ID, '_va_faq_set_id', true );
-        wp_nonce_field( 'va_faq_meta_box', 'va_faq_meta_box_nonce' );
+        $value = get_post_meta( $post->ID, '_answers_set_id', true );
+        wp_nonce_field( 'answers_meta_box', 'answers_meta_box_nonce' );
         ?>
         <p>
-            <label for="va_faq_set_id">FAQ Set ID:</label><br>
+            <label for="answers_set_id">FAQ Set ID:</label><br>
             <input
                 type="text"
-                id="va_faq_set_id"
-                name="va_faq_set_id"
+                id="answers_set_id"
+                name="answers_set_id"
                 value="<?php echo esc_attr( $value ); ?>"
                 placeholder="e.g. blue-snowboard-faqs"
                 style="width: 100%;"
@@ -50,11 +50,11 @@ class VA_FAQ_Meta_Box {
     }
 
     public static function save_meta_box( int $post_id ): void {
-        if ( ! isset( $_POST['va_faq_meta_box_nonce'] ) ) {
+        if ( ! isset( $_POST['answers_meta_box_nonce'] ) ) {
             return;
         }
 
-        if ( ! wp_verify_nonce( $_POST['va_faq_meta_box_nonce'], 'va_faq_meta_box' ) ) {
+        if ( ! wp_verify_nonce( $_POST['answers_meta_box_nonce'], 'answers_meta_box' ) ) {
             return;
         }
 
@@ -66,9 +66,9 @@ class VA_FAQ_Meta_Box {
             return;
         }
 
-        if ( isset( $_POST['va_faq_set_id'] ) ) {
-            $set_id = sanitize_text_field( $_POST['va_faq_set_id'] );
-            update_post_meta( $post_id, '_va_faq_set_id', $set_id );
+        if ( isset( $_POST['answers_set_id'] ) ) {
+            $set_id = sanitize_text_field( $_POST['answers_set_id'] );
+            update_post_meta( $post_id, '_answers_set_id', $set_id );
         }
     }
 }

@@ -4,10 +4,10 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-class VA_FAQ_Shortcode {
+class Answers_Shortcode {
 
     public static function init(): void {
-        add_shortcode( 'verified_answers_faq', [ __CLASS__, 'render' ] );
+        add_shortcode( 'answers', [ __CLASS__, 'render' ] );
     }
 
     public static function render( $atts ): string {
@@ -16,24 +16,24 @@ class VA_FAQ_Shortcode {
             'heading'     => 'Frequently Asked Questions',
             'show_source' => 'yes',
             'heading_tag' => 'h2',
-        ], $atts, 'verified_answers_faq' );
+        ], $atts, 'answers' );
 
         $set_id = sanitize_text_field( $atts['set'] );
         if ( empty( $set_id ) ) {
-            $set_id = get_option( 'va_faq_default_set', '' );
+            $set_id = get_option( 'answers_default_set', '' );
         }
 
         if ( empty( $set_id ) ) {
             return '';
         }
 
-        $faqs = VA_FAQ_Data_Provider::get_faqs( $set_id );
+        $faqs = Answers_Data_Provider::get_faqs( $set_id );
         if ( empty( $faqs ) ) {
             return '';
         }
 
-        wp_enqueue_style( 'va-faq-style' );
+        wp_enqueue_style( 'answers-style' );
 
-        return VA_FAQ_Renderer::render_html( $faqs, $atts );
+        return Answers_Renderer::render_html( $faqs, $atts );
     }
 }

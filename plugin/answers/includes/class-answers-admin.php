@@ -4,7 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-class VA_FAQ_Admin {
+class Answers_Admin {
 
     public static function init(): void {
         add_action( 'admin_menu', [ __CLASS__, 'add_settings_page' ] );
@@ -16,58 +16,58 @@ class VA_FAQ_Admin {
             'Answers by info.link',
             'Answers by info.link',
             'manage_options',
-            'va-faq-settings',
+            'answers-settings',
             [ __CLASS__, 'render_settings_page' ]
         );
     }
 
     public static function register_settings(): void {
-        register_setting( 'va_faq_settings', 'va_faq_api_url', [
+        register_setting( 'answers_settings', 'answers_api_url', [
             'type'              => 'string',
             'sanitize_callback' => 'esc_url_raw',
             'default'           => '',
         ] );
-        register_setting( 'va_faq_settings', 'va_faq_api_key', [
+        register_setting( 'answers_settings', 'answers_api_key', [
             'type'              => 'string',
             'sanitize_callback' => 'sanitize_text_field',
             'default'           => '',
         ] );
-        register_setting( 'va_faq_settings', 'va_faq_cache_ttl', [
+        register_setting( 'answers_settings', 'answers_cache_ttl', [
             'type'              => 'integer',
             'sanitize_callback' => 'absint',
             'default'           => 3600,
         ] );
-        register_setting( 'va_faq_settings', 'va_faq_default_set', [
+        register_setting( 'answers_settings', 'answers_default_set', [
             'type'              => 'string',
             'sanitize_callback' => 'sanitize_text_field',
             'default'           => '',
         ] );
 
         add_settings_section(
-            'va_faq_main_section',
+            'answers_main_section',
             'API Configuration',
             function () {
-                echo '<p>Configure the Verified Answers API connection. Leave API URL empty to use the local JSON data file.</p>';
+                echo '<p>Configure the API connection. Leave API URL empty to use the local JSON data file.</p>';
             },
-            'va-faq-settings'
+            'answers-settings'
         );
 
-        add_settings_field( 'va_faq_api_url', 'API URL', [ __CLASS__, 'render_text_field' ], 'va-faq-settings', 'va_faq_main_section', [
-            'name'        => 'va_faq_api_url',
-            'placeholder' => 'https://api.verifiedanswers.com/v1',
+        add_settings_field( 'answers_api_url', 'API URL', [ __CLASS__, 'render_text_field' ], 'answers-settings', 'answers_main_section', [
+            'name'        => 'answers_api_url',
+            'placeholder' => 'https://api.info.link/v1',
         ] );
-        add_settings_field( 'va_faq_api_key', 'API Key', [ __CLASS__, 'render_text_field' ], 'va-faq-settings', 'va_faq_main_section', [
-            'name'        => 'va_faq_api_key',
+        add_settings_field( 'answers_api_key', 'API Key', [ __CLASS__, 'render_text_field' ], 'answers-settings', 'answers_main_section', [
+            'name'        => 'answers_api_key',
             'placeholder' => 'sk-...',
             'type'        => 'password',
         ] );
-        add_settings_field( 'va_faq_cache_ttl', 'Cache Duration (seconds)', [ __CLASS__, 'render_text_field' ], 'va-faq-settings', 'va_faq_main_section', [
-            'name'        => 'va_faq_cache_ttl',
+        add_settings_field( 'answers_cache_ttl', 'Cache Duration (seconds)', [ __CLASS__, 'render_text_field' ], 'answers-settings', 'answers_main_section', [
+            'name'        => 'answers_cache_ttl',
             'placeholder' => '3600',
             'type'        => 'number',
         ] );
-        add_settings_field( 'va_faq_default_set', 'Default FAQ Set ID', [ __CLASS__, 'render_text_field' ], 'va-faq-settings', 'va_faq_main_section', [
-            'name'        => 'va_faq_default_set',
+        add_settings_field( 'answers_default_set', 'Default FAQ Set ID', [ __CLASS__, 'render_text_field' ], 'answers-settings', 'answers_main_section', [
+            'name'        => 'answers_default_set',
             'placeholder' => 'general-store-faqs',
         ] );
     }
@@ -96,8 +96,8 @@ class VA_FAQ_Admin {
             <h1>Answers by info.link Settings</h1>
             <form action="options.php" method="post">
                 <?php
-                settings_fields( 'va_faq_settings' );
-                do_settings_sections( 'va-faq-settings' );
+                settings_fields( 'answers_settings' );
+                do_settings_sections( 'answers-settings' );
                 submit_button();
                 ?>
             </form>

@@ -4,18 +4,12 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-class VA_FAQ_Data_Provider {
+class Answers_Data_Provider {
 
     private static $json_cache = null;
 
-    /**
-     * Get FAQs for a given set ID.
-     *
-     * Phase 1: Reads from local JSON file.
-     * Phase 2: Will fetch from REST API with transient caching.
-     */
     public static function get_faqs( string $faq_set_id ): array {
-        $api_url = get_option( 'va_faq_api_url', '' );
+        $api_url = get_option( 'answers_api_url', '' );
 
         if ( ! empty( $api_url ) ) {
             return self::get_faqs_from_api( $faq_set_id, $api_url );
@@ -26,7 +20,7 @@ class VA_FAQ_Data_Provider {
 
     private static function get_faqs_from_json( string $faq_set_id ): array {
         if ( self::$json_cache === null ) {
-            $file = VA_FAQ_PATH . 'data/sample-faqs.json';
+            $file = ANSWERS_PATH . 'data/sample-faqs.json';
             if ( ! file_exists( $file ) ) {
                 return [];
             }
@@ -45,15 +39,15 @@ class VA_FAQ_Data_Provider {
     }
 
     private static function get_faqs_from_api( string $faq_set_id, string $api_url ): array {
-        $cache_key = 'va_faq_' . md5( $faq_set_id );
+        $cache_key = 'answers_' . md5( $faq_set_id );
         $cached    = get_transient( $cache_key );
 
         if ( $cached !== false ) {
             return $cached;
         }
 
-        $api_key  = get_option( 'va_faq_api_key', '' );
-        $ttl      = (int) get_option( 'va_faq_cache_ttl', 3600 );
+        $api_key  = get_option( 'answers_api_key', '' );
+        $ttl      = (int) get_option( 'answers_cache_ttl', 3600 );
         $url      = trailingslashit( $api_url ) . 'faqs/' . urlencode( $faq_set_id );
 
         $args = [
@@ -68,7 +62,6 @@ class VA_FAQ_Data_Provider {
         $response = wp_remote_get( $url, $args );
 
         if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {
-            // Fallback to JSON file if API is unreachable
             return self::get_faqs_from_json( $faq_set_id );
         }
 

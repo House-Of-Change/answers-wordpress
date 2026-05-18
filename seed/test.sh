@@ -1,5 +1,5 @@
 #!/bin/sh
-# Smoke tests for Verified Answers FAQ plugin
+# Smoke tests for Answers by info.link plugin
 # Usage: sh seed/test.sh
 
 BASE_URL="${1:-http://localhost:8080}"
@@ -29,7 +29,7 @@ echo ""
 # Product pages - FAQ HTML
 check "Blue Snowboard has FAQ section" \
     "$BASE_URL/product/blue-snowboard/" \
-    "va-faq-section"
+    "answers-section"
 
 check "Blue Snowboard has FAQ question" \
     "$BASE_URL/product/blue-snowboard/" \
@@ -37,11 +37,11 @@ check "Blue Snowboard has FAQ question" \
 
 check "Red Snowboard has FAQ section" \
     "$BASE_URL/product/red-snowboard/" \
-    "va-faq-section"
+    "answers-section"
 
 check "Green Jacket has FAQ section" \
     "$BASE_URL/product/green-jacket/" \
-    "va-faq-section"
+    "answers-section"
 
 # Product pages - JSON-LD
 check "Blue Snowboard has FAQPage JSON-LD" \
@@ -55,7 +55,7 @@ check "Blue Snowboard JSON-LD has schema.org context" \
 # Landing pages
 check "Shipping & Returns has FAQ section" \
     "$BASE_URL/shipping-returns/" \
-    "va-faq-section"
+    "answers-section"
 
 check "Shipping & Returns has return policy question" \
     "$BASE_URL/shipping-returns/" \
@@ -68,7 +68,7 @@ check "Shipping & Returns has FAQPage JSON-LD" \
 # Shortcode page
 check "About Our Store has FAQ section (via shortcode)" \
     "$BASE_URL/about-our-store/" \
-    "va-faq-section"
+    "answers-section"
 
 check "About Our Store has gift card question" \
     "$BASE_URL/about-our-store/" \
@@ -86,7 +86,7 @@ check "FAQ items have Question microdata" \
 # CSS loaded
 check "FAQ CSS is enqueued" \
     "$BASE_URL/product/blue-snowboard/" \
-    "va-faq.css"
+    "answers.css"
 
 echo ""
 echo "========================================="

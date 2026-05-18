@@ -37,15 +37,15 @@ jobs:
 
       - name: Update version in plugin file
         run: |
-          PLUGIN_FILE="plugin/verified-answers-faq/verified-answers-faq.php"
+          PLUGIN_FILE="plugin/answers/answers.php"
           VERSION="${{ steps.version.outputs.version }}"
           sed -i "s/ \* Version:.*/ * Version: ${VERSION}/" "$PLUGIN_FILE"
-          sed -i "s/define( 'VA_FAQ_VERSION', '[^']*' )/define( 'VA_FAQ_VERSION', '${VERSION}' )/" "$PLUGIN_FILE"
+          sed -i "s/define( 'ANSWERS_VERSION', '[^']*' )/define( 'ANSWERS_VERSION', '${VERSION}' )/" "$PLUGIN_FILE"
 
       - name: Build zip
         run: |
           cd plugin
-          zip -r ../verified-answers-faq.zip verified-answers-faq/ \
+          zip -r ../answers.zip answers/ \
             --exclude "*.DS_Store" \
             --exclude "__MACOSX/*"
 
@@ -68,7 +68,7 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: ${{ steps.version.outputs.tag }}
-          files: verified-answers-faq.zip
+          files: answers.zip
           body: |
             ## What's changed
 
@@ -82,7 +82,7 @@ jobs:
             curl -L \
               "$(curl -s 'https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ steps.version.outputs.tag }}' \
                 | grep '"browser_download_url"' | cut -d'"' -f4)" \
-              -o verified-answers-faq.zip
+              -o answers.zip
             ```
 
             Then install in WordPress: **Plugins → Add New → Upload Plugin**.

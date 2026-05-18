@@ -1,25 +1,25 @@
-.va-faq-section {
+.answers-section {
     max-width: 800px;
     margin: 2rem 0;
 }
 
-.va-faq-heading {
+.answers-heading {
     margin-bottom: 1rem;
 }
 
-.va-faq-item {
+.answers-item {
     border-bottom: 1px solid #e0e0e0;
 }
 
-.va-faq-item:first-of-type {
+.answers-item:first-of-type {
     border-top: 1px solid #e0e0e0;
 }
 
-.va-faq-item details {
+.answers-item details {
     padding: 0;
 }
 
-.va-faq-item summary {
+.answers-item summary {
     cursor: pointer;
     padding: 1rem 0;
     font-weight: 600;
@@ -29,11 +29,11 @@
     align-items: center;
 }
 
-.va-faq-item summary::-webkit-details-marker {
+.answers-item summary::-webkit-details-marker {
     display: none;
 }
 
-.va-faq-item summary::after {
+.answers-item summary::after {
     content: "+";
     font-size: 1.25rem;
     font-weight: 400;
@@ -41,16 +41,16 @@
     margin-left: 1rem;
 }
 
-.va-faq-item details[open] summary::after {
+.answers-item details[open] summary::after {
     content: "\2212"; /* minus sign */
 }
 
-.va-faq-answer {
+.answers-answer {
     padding: 0 0 1rem 0;
     line-height: 1.6;
 }
 
-.va-faq-source {
+.answers-source {
     display: block;
     margin-top: 0.75rem;
     font-size: 0.85em;
