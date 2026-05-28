@@ -28,7 +28,7 @@ require_once ANSWERS_PATH . 'vendor/plugin-update-checker/plugin-update-checker.
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
 $answers_update_checker = PucFactory::buildUpdateChecker(
-    'https://github.com/benatwork/answers-wordpress/',
+    'https://github.com/House-Of-Change/answers-wordpress/',
     __FILE__,
     'answers'
 );
