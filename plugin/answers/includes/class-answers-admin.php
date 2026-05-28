@@ -54,7 +54,7 @@ class Answers_Admin {
 
         add_settings_field( 'answers_api_url', 'API URL', [ __CLASS__, 'render_text_field' ], 'answers-settings', 'answers_main_section', [
             'name'        => 'answers_api_url',
-            'placeholder' => 'https://api.info.link/v1',
+            'placeholder' => 'https://answers.info.link/api/publish',
         ] );
         add_settings_field( 'answers_api_key', 'API Key', [ __CLASS__, 'render_text_field' ], 'answers-settings', 'answers_main_section', [
             'name'        => 'answers_api_key',
