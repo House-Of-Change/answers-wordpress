@@ -49,7 +49,7 @@ All FAQ content is rendered in PHP before the response is sent:
 
 - **Product pages**: FAQs appear as a WooCommerce product tab via the `woocommerce_product_tabs` filter
 - **Pages/posts**: FAQs are appended after `the_content` automatically when a FAQ set ID is assigned
-- **Shortcode**: `[answers set="general-store-faqs" heading="Store FAQ"]` for manual placement anywhere
+- **Shortcode**: `[answers_faq set="general-store-faqs" heading="Store FAQ"]` for manual placement anywhere
 
 ### Structured Data
 
@@ -66,7 +66,7 @@ plugin/answers/
 │   ├── class-answers-data-provider.php  # Data layer (local JSON now, REST API later)
 │   ├── class-answers-renderer.php       # HTML output + JSON-LD structured data
 │   ├── class-answers-hooks.php          # Auto-injection via WordPress/WooCommerce hooks
-│   ├── class-answers-shortcode.php      # [answers] shortcode
+│   ├── class-answers-shortcode.php      # [answers_faq] shortcode
 │   ├── class-answers-admin.php          # Settings page (Settings > Answers by info.link)
 │   └── class-answers-meta-box.php       # Per-post/product FAQ set ID selector
 ├── data/

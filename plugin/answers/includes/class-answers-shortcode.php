@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Answers_Shortcode {
 
     public static function init(): void {
-        add_shortcode( 'answers', [ __CLASS__, 'render' ] );
+        add_shortcode( 'answers_faq', [ __CLASS__, 'render' ] );
     }
 
     public static function render( $atts ): string {
@@ -16,7 +16,7 @@ class Answers_Shortcode {
             'heading'     => 'Frequently Asked Questions',
             'show_source' => 'yes',
             'heading_tag' => 'h2',
-        ], $atts, 'answers' );
+        ], $atts, 'answers_faq' );
 
         $set_id = sanitize_text_field( $atts['set'] );
         if ( empty( $set_id ) ) {

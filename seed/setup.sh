@@ -135,7 +135,7 @@ ABOUT_ID=$(wp post create \
 
 <p>Have questions? Check out our FAQ below:</p>
 
-[answers set="general-store-faqs" heading="Store FAQ"]' \
+[answers_faq set="general-store-faqs" heading="Store FAQ"]' \
     --post_status=publish \
     --porcelain \
     --path="$WP_PATH")
