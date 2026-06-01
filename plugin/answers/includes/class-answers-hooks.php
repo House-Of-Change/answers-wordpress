@@ -22,8 +22,8 @@ class Answers_Hooks {
         );
 
         if ( is_singular() ) {
-            $set_id = get_post_meta( get_the_ID(), '_answers_set_id', true );
-            if ( ! empty( $set_id ) ) {
+            $feed_id = get_post_meta( get_the_ID(), '_answers_feed_id', true );
+            if ( ! empty( $feed_id ) ) {
                 wp_enqueue_style( 'answers-style' );
             }
         }
@@ -38,12 +38,12 @@ class Answers_Hooks {
             return $content;
         }
 
-        $set_id = get_post_meta( get_the_ID(), '_answers_set_id', true );
-        if ( empty( $set_id ) ) {
+        $feed_id = get_post_meta( get_the_ID(), '_answers_feed_id', true );
+        if ( empty( $feed_id ) ) {
             return $content;
         }
 
-        $html = Answers_Data_Provider::get_faq_html( $set_id );
+        $html = Answers_Data_Provider::get_faq_html( $feed_id );
         if ( $html === '' ) {
             return $content;
         }
@@ -60,15 +60,15 @@ class Answers_Hooks {
             return $tabs;
         }
 
-        $set_id = get_post_meta( $product->get_id(), '_answers_set_id', true );
-        if ( empty( $set_id ) ) {
+        $feed_id = get_post_meta( $product->get_id(), '_answers_feed_id', true );
+        if ( empty( $feed_id ) ) {
             return $tabs;
         }
 
         // Resolve the markup now (cached in a transient) so we only add the tab
         // when there is actually content — covers API-only feeds that aren't in
         // the local sample. render_product_tab() reuses the cached result.
-        $html = Answers_Data_Provider::get_faq_html( $set_id );
+        $html = Answers_Data_Provider::get_faq_html( $feed_id );
         if ( $html === '' ) {
             return $tabs;
         }
@@ -89,9 +89,9 @@ class Answers_Hooks {
             return;
         }
 
-        $set_id = get_post_meta( $product->get_id(), '_answers_set_id', true );
+        $feed_id = get_post_meta( $product->get_id(), '_answers_feed_id', true );
 
-        echo Answers_Data_Provider::get_faq_html( $set_id );
+        echo Answers_Data_Provider::get_faq_html( $feed_id );
     }
 
     public static function inject_jsonld(): void {
@@ -106,12 +106,12 @@ class Answers_Hooks {
             return;
         }
 
-        $set_id = get_post_meta( get_the_ID(), '_answers_set_id', true );
-        if ( empty( $set_id ) ) {
+        $feed_id = get_post_meta( get_the_ID(), '_answers_feed_id', true );
+        if ( empty( $feed_id ) ) {
             return;
         }
 
-        $faqs = Answers_Data_Provider::get_faqs( $set_id );
+        $faqs = Answers_Data_Provider::get_faqs( $feed_id );
         if ( empty( $faqs ) ) {
             return;
         }

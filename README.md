@@ -39,8 +39,8 @@ The plugin lives in `plugin/answers/` and is volume-mounted into the WordPress c
 
 ### How It Works
 
-1. **Each page/product gets a FAQ Set ID** via a meta box in the WordPress editor sidebar (stored as `_answers_set_id` post meta).
-2. **The data provider** loads FAQs for that set ID — currently from a local JSON file (`data/sample-faqs.json`), designed to switch to the Verified Answers REST API later.
+1. **Each page/product gets a Feed ID** via a meta box in the WordPress editor sidebar (stored as `_answers_feed_id` post meta).
+2. **The data provider** fetches the rendered HTML for that feed from the publish API, falling back to a local JSON sample (`data/sample-faqs.json`) when no API URL is set or the request fails.
 3. **FAQs render server-side** as HTML in the initial response (no client-side JS fetching), so content is visible to `curl`, Googlebot, and LLM crawlers.
 
 ### SSR Rendering
@@ -62,7 +62,7 @@ Place a feed anywhere with the `[answers_faq]` shortcode. Only `id` is required 
 
 | Attribute | API param | Values | Effect |
 |---|---|---|---|
-| `id` *(required)* | path | feed UUID | Which published feed to render. Falls back to the **Default FAQ Set ID** setting if omitted. |
+| `id` *(required)* | path | feed UUID | Which published feed to render. Falls back to the **Default Feed ID** setting if omitted. |
 | `slug` | `slug` | entity slug | Pick one entity from a multi-entity feed. Defaults to the feed's primary (first) entity. |
 | `variant` | `variant` | `embedded`, `standalone` | `embedded` returns an injectable HTML fragment (no `<html>`/`<head>`). `standalone` returns a **complete HTML document** — only use it for a dedicated page, never inside existing content. |
 | `styling` | `styling` | `scoped`, `full`, `none` | `scoped` ships only structural, `.ep-`-prefixed CSS so your theme's typography flows through (recommended for embedding). `full` ships the complete stylesheet — ⚠️ it contains global selectors (`*`, `body`, `h2`, …) that **restyle the host page**, so reserve it for `standalone`. `none` ships no CSS. |
@@ -150,4 +150,4 @@ docker-compose.yml
 └── wpcli       — WP-CLI (runs seed/setup.sh on first boot)
 ```
 
-The `seed/setup.sh` script handles all first-run configuration: WordPress install, WooCommerce setup, theme activation, product/page creation, and FAQ set assignment via post meta.
+The `seed/setup.sh` script handles all first-run configuration: WordPress install, WooCommerce setup, theme activation, product/page creation, and feed ID assignment via post meta.

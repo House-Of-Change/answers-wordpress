@@ -37,7 +37,7 @@ class Answers_Admin {
             'sanitize_callback' => 'absint',
             'default'           => 3600,
         ] );
-        register_setting( 'answers_settings', 'answers_default_set', [
+        register_setting( 'answers_settings', 'answers_default_feed', [
             'type'              => 'string',
             'sanitize_callback' => 'sanitize_text_field',
             'default'           => '',
@@ -66,9 +66,9 @@ class Answers_Admin {
             'placeholder' => '3600',
             'type'        => 'number',
         ] );
-        add_settings_field( 'answers_default_set', 'Default FAQ Set ID', [ __CLASS__, 'render_text_field' ], 'answers-settings', 'answers_main_section', [
-            'name'        => 'answers_default_set',
-            'placeholder' => 'general-store-faqs',
+        add_settings_field( 'answers_default_feed', 'Default Feed ID', [ __CLASS__, 'render_text_field' ], 'answers-settings', 'answers_main_section', [
+            'name'        => 'answers_default_feed',
+            'placeholder' => '8da215bd-62a2-45e7-b6b2-70dafae4b57f',
         ] );
     }
 

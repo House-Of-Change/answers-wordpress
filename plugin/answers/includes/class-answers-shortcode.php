@@ -25,7 +25,7 @@ class Answers_Shortcode {
 
         $feed_id = sanitize_text_field( $atts['id'] );
         if ( empty( $feed_id ) ) {
-            $feed_id = get_option( 'answers_default_set', '' );
+            $feed_id = get_option( 'answers_default_feed', '' );
         }
 
         if ( empty( $feed_id ) ) {

@@ -16,7 +16,7 @@ class Answers_Meta_Box {
 
         foreach ( $post_types as $post_type ) {
             add_meta_box(
-                'answers_set_id',
+                'answers_feed_id',
                 'Answers',
                 [ __CLASS__, 'render_meta_box' ],
                 $post_type,
@@ -27,23 +27,23 @@ class Answers_Meta_Box {
     }
 
     public static function render_meta_box( $post ): void {
-        $value = get_post_meta( $post->ID, '_answers_set_id', true );
+        $value = get_post_meta( $post->ID, '_answers_feed_id', true );
         wp_nonce_field( 'answers_meta_box', 'answers_meta_box_nonce' );
         ?>
         <p>
-            <label for="answers_set_id">FAQ Set ID:</label><br>
+            <label for="answers_feed_id">Feed ID:</label><br>
             <input
                 type="text"
-                id="answers_set_id"
-                name="answers_set_id"
+                id="answers_feed_id"
+                name="answers_feed_id"
                 value="<?php echo esc_attr( $value ); ?>"
-                placeholder="e.g. blue-snowboard-faqs"
+                placeholder="e.g. 8da215bd-62a2-45e7-b6b2-70dafae4b57f"
                 style="width: 100%;"
             />
         </p>
         <p class="description">
-            Enter the FAQ set ID to display on this page. Available sets:
-            blue-snowboard-faqs, red-snowboard-faqs, green-jacket-faqs,
+            Enter the published feed ID to display on this page. Local sample
+            feeds: blue-snowboard-faqs, red-snowboard-faqs, green-jacket-faqs,
             returns-shipping, general-store-faqs
         </p>
         <?php
@@ -66,9 +66,9 @@ class Answers_Meta_Box {
             return;
         }
 
-        if ( isset( $_POST['answers_set_id'] ) ) {
-            $set_id = sanitize_text_field( $_POST['answers_set_id'] );
-            update_post_meta( $post_id, '_answers_set_id', $set_id );
+        if ( isset( $_POST['answers_feed_id'] ) ) {
+            $feed_id = sanitize_text_field( $_POST['answers_feed_id'] );
+            update_post_meta( $post_id, '_answers_feed_id', $feed_id );
         }
     }
 }
