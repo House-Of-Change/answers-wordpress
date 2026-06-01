@@ -43,14 +43,14 @@ class Answers_Hooks {
             return $content;
         }
 
-        $faqs = Answers_Data_Provider::get_faqs( $set_id );
-        if ( empty( $faqs ) ) {
+        $html = Answers_Data_Provider::get_faq_html( $set_id );
+        if ( $html === '' ) {
             return $content;
         }
 
         wp_enqueue_style( 'answers-style' );
 
-        return $content . Answers_Renderer::render_html( $faqs );
+        return $content . $html;
     }
 
     public static function add_product_tab( array $tabs ): array {
@@ -65,8 +65,11 @@ class Answers_Hooks {
             return $tabs;
         }
 
-        $faqs = Answers_Data_Provider::get_faqs( $set_id );
-        if ( empty( $faqs ) ) {
+        // Resolve the markup now (cached in a transient) so we only add the tab
+        // when there is actually content — covers API-only sets that aren't in
+        // the local sample. render_product_tab() reuses the cached result.
+        $html = Answers_Data_Provider::get_faq_html( $set_id, [ 'heading' => 'Product FAQ', 'heading_tag' => 'h2' ] );
+        if ( $html === '' ) {
             return $tabs;
         }
 
@@ -87,13 +90,19 @@ class Answers_Hooks {
         }
 
         $set_id = get_post_meta( $product->get_id(), '_answers_set_id', true );
-        $faqs   = Answers_Data_Provider::get_faqs( $set_id );
 
-        echo Answers_Renderer::render_html( $faqs, [ 'heading' => 'Product FAQ', 'heading_tag' => 'h2' ] );
+        echo Answers_Data_Provider::get_faq_html( $set_id, [ 'heading' => 'Product FAQ', 'heading_tag' => 'h2' ] );
     }
 
     public static function inject_jsonld(): void {
         if ( ! is_singular() ) {
+            return;
+        }
+
+        // When an API URL is configured the pre-rendered HTML carries its own
+        // FAQPage JSON-LD (and the local fallback emits it inline), so skip the
+        // head injection to avoid duplicate structured data.
+        if ( ! empty( get_option( 'answers_api_url', '' ) ) ) {
             return;
         }
 

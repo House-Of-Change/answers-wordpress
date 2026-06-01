@@ -27,13 +27,13 @@ class Answers_Shortcode {
             return '';
         }
 
-        $faqs = Answers_Data_Provider::get_faqs( $set_id );
-        if ( empty( $faqs ) ) {
+        $html = Answers_Data_Provider::get_faq_html( $set_id, $atts );
+        if ( $html === '' ) {
             return '';
         }
 
         wp_enqueue_style( 'answers-style' );
 
-        return Answers_Renderer::render_html( $faqs, $atts );
+        return $html;
     }
 }
