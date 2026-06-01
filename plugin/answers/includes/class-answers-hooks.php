@@ -66,9 +66,9 @@ class Answers_Hooks {
         }
 
         // Resolve the markup now (cached in a transient) so we only add the tab
-        // when there is actually content — covers API-only sets that aren't in
+        // when there is actually content — covers API-only feeds that aren't in
         // the local sample. render_product_tab() reuses the cached result.
-        $html = Answers_Data_Provider::get_faq_html( $set_id, [ 'heading' => 'Product FAQ', 'heading_tag' => 'h2' ] );
+        $html = Answers_Data_Provider::get_faq_html( $set_id );
         if ( $html === '' ) {
             return $tabs;
         }
@@ -91,7 +91,7 @@ class Answers_Hooks {
 
         $set_id = get_post_meta( $product->get_id(), '_answers_set_id', true );
 
-        echo Answers_Data_Provider::get_faq_html( $set_id, [ 'heading' => 'Product FAQ', 'heading_tag' => 'h2' ] );
+        echo Answers_Data_Provider::get_faq_html( $set_id );
     }
 
     public static function inject_jsonld(): void {

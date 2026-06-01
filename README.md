@@ -48,12 +48,37 @@ The plugin lives in `plugin/answers/` and is volume-mounted into the WordPress c
 All FAQ content is rendered in PHP before the response is sent:
 
 - **Product pages**: FAQs appear as a WooCommerce product tab via the `woocommerce_product_tabs` filter
-- **Pages/posts**: FAQs are appended after `the_content` automatically when a FAQ set ID is assigned
-- **Shortcode**: `[answers_faq set="general-store-faqs" heading="Store FAQ"]` for manual placement anywhere
+- **Pages/posts**: FAQs are appended after `the_content` automatically when a feed ID is assigned
+- **Shortcode**: `[answers_faq id="<feed-uuid>"]` for manual placement anywhere
+
+### Shortcode
+
+Place a feed anywhere with the `[answers_faq]` shortcode. Only `id` is required — every other attribute maps 1:1 to a publish-feed query parameter and is **optional**. When an attribute is omitted, the API serves the **default preset the publisher chose when the snapshot was captured**, so a bare `[answers_faq id="…"]` renders exactly what the publisher intended. Supplying an attribute overrides that preset for this placement only.
+
+```
+[answers_faq id="8da215bd-62a2-45e7-b6b2-70dafae4b57f"]
+[answers_faq id="8da215bd-…" styling="scoped" heading_level="2" hide="verificationSources,authorshipCredentials"]
+```
+
+| Attribute | API param | Values | Effect |
+|---|---|---|---|
+| `id` *(required)* | path | feed UUID | Which published feed to render. Falls back to the **Default FAQ Set ID** setting if omitted. |
+| `slug` | `slug` | entity slug | Pick one entity from a multi-entity feed. Defaults to the feed's primary (first) entity. |
+| `variant` | `variant` | `embedded`, `standalone` | `embedded` returns an injectable HTML fragment (no `<html>`/`<head>`). `standalone` returns a **complete HTML document** — only use it for a dedicated page, never inside existing content. |
+| `styling` | `styling` | `scoped`, `full`, `none` | `scoped` ships only structural, `.ep-`-prefixed CSS so your theme's typography flows through (recommended for embedding). `full` ships the complete stylesheet — ⚠️ it contains global selectors (`*`, `body`, `h2`, …) that **restyle the host page**, so reserve it for `standalone`. `none` ships no CSS. |
+| `heading_level` | `headingLevel` | `1`, `2`, `3` | Top heading level for the rendered block — set `2` or `3` to nest correctly under the page's existing `<h1>`. |
+| `hide` | `hide` | comma-separated section keys | Hide sections from this placement. Can only **hide** sections the publisher included — it can never reveal content the publisher excluded. |
+
+**Section keys for `hide`:** `pageHeader`, `pageIndex`, `faqs`, `relatedEntities`, `authorshipCredentials`, `verificationSources`, `humanNotice`, `identity`, `identityDescription`, `hierarchy`, `company`, `webPresence`, `classification`, `certifications`, `specifications`, `howItDiffers`, `differentiators`, `entityPositioning`, `notIdenticalWith`, `structuredData`, `provProvenance`, `gs1Identifiers`.
+
+> Invalid values (e.g. `styling="bogus"`) are dropped rather than sent, so a typo falls back to the publisher's preset instead of erroring.
 
 ### Structured Data
 
-The plugin injects [FAQPage JSON-LD](https://schema.org/FAQPage) into `<head>` on any page with FAQs. This enables rich results in Google and makes the content machine-readable for AI assistants.
+[FAQPage JSON-LD](https://schema.org/FAQPage) is emitted for rich results in Google and machine-readability for AI assistants. The source depends on the mode:
+
+- **API mode**: the rendered feed embeds its own JSON-LD `<script>` (when the publisher enables the `structuredData` section), so the plugin injects it as part of the HTML and **skips** the separate `<head>` injection to avoid duplicate schema.
+- **Local-sample mode** (no API URL): the plugin builds the JSON-LD in PHP and injects it into `<head>`.
 
 Verify with: `curl -s http://localhost:8080/product/blue-snowboard/ | grep 'application/ld+json'`
 
@@ -63,27 +88,25 @@ Verify with: `curl -s http://localhost:8080/product/blue-snowboard/ | grep 'appl
 plugin/answers/
 ├── answers.php                         # Bootstrap, constants, hook registration
 ├── includes/
-│   ├── class-answers-data-provider.php  # Data layer (local JSON now, REST API later)
-│   ├── class-answers-renderer.php       # HTML output + JSON-LD structured data
+│   ├── class-answers-data-provider.php  # Fetches rendered HTML from the publish feed; local JSON fallback
+│   ├── class-answers-renderer.php       # Local-sample HTML output + JSON-LD (fallback only)
 │   ├── class-answers-hooks.php          # Auto-injection via WordPress/WooCommerce hooks
 │   ├── class-answers-shortcode.php      # [answers_faq] shortcode
 │   ├── class-answers-admin.php          # Settings page (Settings > Answers by info.link)
-│   └── class-answers-meta-box.php       # Per-post/product FAQ set ID selector
+│   └── class-answers-meta-box.php       # Per-post/product feed ID selector
 ├── data/
-│   └── sample-faqs.json               # Hardcoded FAQ sets keyed by set ID
+│   └── sample-faqs.json               # Local sample feeds keyed by ID (offline fallback)
 └── assets/css/
     └── answers.css                     # FAQ accordion styles
 ```
 
 ### Connecting to the Verified Answers API
 
-When the platform's publish REST API is ready, the switch requires no code changes:
-
 1. Go to **Settings > Answers by info.link** in WP Admin
-2. Enter the **API URL** and **API Key**
-3. The data provider automatically fetches from the API instead of the local JSON file, with transient caching (configurable TTL)
+2. Enter the **API URL** (the publish base, e.g. `https://answers.info.link/api/publish`) and **API Key**
+3. The data provider fetches each feed from `{API URL}/{id}?format=html` and injects the returned HTML, with transient caching (configurable TTL)
 
-The local JSON file serves as a fallback if the API is unreachable.
+The plugin always requests `format=html`; presentation is otherwise driven by the publisher's default preset unless a [shortcode option](#shortcode) overrides it. The local JSON sample serves as a fallback if the API is unreachable.
 
 ## Releasing & Client Distribution
 

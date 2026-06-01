@@ -9,24 +9,27 @@ class Answers_Data_Provider {
     private static $json_cache = null;
 
     /**
-     * Return the FAQ markup to inject for a set.
+     * Return the FAQ markup to inject for a feed.
      *
-     * When an API URL is configured the plugin fetches the pre-rendered HTML
-     * feed (?format=html) and injects it verbatim — the app owns the markup,
-     * the CSS (full or basic, per its publish settings) and the embedded
-     * FAQPage JSON-LD. If the request fails, or no API URL is set at all, the
-     * local JSON sample is rendered in PHP as a fallback.
+     * When an API URL is configured the plugin fetches the rendered HTML feed
+     * (always ?format=html) and injects it verbatim — the app owns the markup,
+     * styling, and embedded FAQPage JSON-LD. Any presentation options provided
+     * are forwarded as query params; whatever is omitted is left to the API,
+     * which falls back to the preset the publisher chose when the snapshot was
+     * captured. If the request fails, or no API URL is set at all, the local
+     * JSON sample is rendered in PHP as a fallback.
      *
-     * @param string $faq_set_id Publish-feed set ID (or UUID).
-     * @param array  $attrs      Presentation attrs (heading/heading_tag/
-     *                           show_source). Honored only by the local PHP
-     *                           renderer; the API HTML controls its own.
+     * @param string $feed_id Publish-feed ID (UUID).
+     * @param array  $options Optional presentation overrides forwarded to the
+     *                        API: slug, variant, styling, heading_level, hide.
+     *                        Only valid, non-empty values are sent; anything
+     *                        absent defers to the published default preset.
      */
-    public static function get_faq_html( string $faq_set_id, array $attrs = [] ): string {
+    public static function get_faq_html( string $feed_id, array $options = [] ): string {
         $api_url = get_option( 'answers_api_url', '' );
 
         if ( ! empty( $api_url ) ) {
-            $html = self::get_html_from_api( $faq_set_id, $api_url );
+            $html = self::get_html_from_api( $feed_id, $api_url, $options );
             if ( $html !== null ) {
                 return $html;
             }
@@ -34,27 +37,27 @@ class Answers_Data_Provider {
             // API unreachable — render the local sample instead. The wp_head
             // JSON-LD hook is disabled whenever an API URL is configured (the
             // API HTML normally carries its own), so emit it inline here.
-            $faqs = self::get_faqs_from_json( $faq_set_id );
+            $faqs = self::get_faqs_from_json( $feed_id );
             if ( empty( $faqs ) ) {
                 return '';
             }
-            return Answers_Renderer::render_html( $faqs, $attrs )
+            return Answers_Renderer::render_html( $faqs )
                  . Answers_Renderer::render_jsonld( $faqs );
         }
 
-        $faqs = self::get_faqs_from_json( $faq_set_id );
+        $faqs = self::get_faqs_from_json( $feed_id );
         if ( empty( $faqs ) ) {
             return '';
         }
-        return Answers_Renderer::render_html( $faqs, $attrs );
+        return Answers_Renderer::render_html( $faqs );
     }
 
     /**
-     * FAQ array for a set. Used for the wp_head JSON-LD injection in
+     * FAQ array for a feed. Used for the wp_head JSON-LD injection in
      * local-only mode (no API URL configured).
      */
-    public static function get_faqs( string $faq_set_id ): array {
-        return self::get_faqs_from_json( $faq_set_id );
+    public static function get_faqs( string $feed_id ): array {
+        return self::get_faqs_from_json( $feed_id );
     }
 
     private static function get_faqs_from_json( string $faq_set_id ): array {
@@ -78,24 +81,27 @@ class Answers_Data_Provider {
     }
 
     /**
-     * Fetch the pre-rendered FAQ HTML fragment from the publish feed.
+     * Fetch the rendered FAQ HTML from the publish feed.
      *
-     * The endpoint is queried with ?format=html&variant=embedded and replies
-     * with a JSON envelope { html, meta } — `html` is the embeddable fragment
-     * (no <html>/<head> chrome) that bakes in the publisher's chosen styling
-     * (scoped / full / none) and, when enabled, the FAQPage JSON-LD. The
-     * `embedded` variant is requested deliberately: the `standalone` variant is
-     * a complete <!DOCTYPE html> document and cannot be injected into a page.
+     * Always queries with ?format=html and replies with a JSON envelope
+     * { html, meta } — `html` is the rendered markup that bakes in the chosen
+     * styling and, when enabled, the FAQPage JSON-LD. Presentation options are
+     * forwarded only when supplied; with none, the API serves the default
+     * preset the publisher captured with the snapshot. The fragment is injected
+     * verbatim, so the response is trusted — a first-party endpoint over HTTPS.
      *
-     * The fragment is injected verbatim, so the response is trusted — this is a
-     * first-party endpoint reached over HTTPS.
-     *
-     * @return string|null Fragment HTML on success (possibly an empty string if
-     *                     the set has no published FAQs), or null if the
-     *                     request failed and the caller should fall back.
+     * @param array $options slug / variant / styling / heading_level / hide.
+     * @return string|null   HTML on success (possibly an empty string if the
+     *                       feed has no published FAQs), or null if the request
+     *                       failed and the caller should fall back.
      */
-    private static function get_html_from_api( string $faq_set_id, string $api_url ): ?string {
-        $cache_key = 'answers_html_' . md5( $faq_set_id );
+    private static function get_html_from_api( string $feed_id, string $api_url, array $options = [] ): ?string {
+        $url = trailingslashit( $api_url ) . urlencode( $feed_id );
+        $url = add_query_arg( self::build_query_args( $options ), $url );
+
+        // Key the cache on the full request URL so different option
+        // combinations (and different feeds) never share a cached entry.
+        $cache_key = 'answers_html_' . md5( $url );
         $cached    = get_transient( $cache_key );
 
         if ( is_string( $cached ) ) {
@@ -104,14 +110,6 @@ class Answers_Data_Provider {
 
         $api_key = get_option( 'answers_api_key', '' );
         $ttl     = (int) get_option( 'answers_cache_ttl', 3600 );
-        $url     = trailingslashit( $api_url ) . urlencode( $faq_set_id );
-        $url     = add_query_arg(
-            [
-                'format'  => 'html',
-                'variant' => 'embedded',
-            ],
-            $url
-        );
 
         $args = [
             'timeout' => 10,
@@ -136,7 +134,7 @@ class Answers_Data_Provider {
             return null;
         }
 
-        // The feed wraps the fragment in a JSON envelope: { html, meta }.
+        // The feed wraps the markup in a JSON envelope: { html, meta }.
         $decoded = json_decode( wp_remote_retrieve_body( $response ), true );
         if ( ! is_array( $decoded ) || ! isset( $decoded['html'] ) || ! is_string( $decoded['html'] ) ) {
             self::log_api_failure( $url, 'unexpected response shape (no html field)' );
@@ -148,6 +146,43 @@ class Answers_Data_Provider {
         set_transient( $cache_key, $html, $ttl );
 
         return $html;
+    }
+
+    /**
+     * Translate shortcode-style options into publish-feed query args.
+     *
+     * `format=html` is always set. Every other option is forwarded only when
+     * present and valid; anything omitted (or invalid) is left out so the API
+     * applies the publisher's default preset rather than a plugin-side guess.
+     */
+    private static function build_query_args( array $options ): array {
+        $query = [ 'format' => 'html' ];
+
+        if ( ! empty( $options['slug'] ) ) {
+            $query['slug'] = (string) $options['slug'];
+        }
+
+        if ( ! empty( $options['variant'] ) && in_array( $options['variant'], [ 'embedded', 'standalone' ], true ) ) {
+            $query['variant'] = $options['variant'];
+        }
+
+        if ( ! empty( $options['styling'] ) && in_array( $options['styling'], [ 'scoped', 'full', 'none' ], true ) ) {
+            $query['styling'] = $options['styling'];
+        }
+
+        if ( ! empty( $options['heading_level'] ) && in_array( (int) $options['heading_level'], [ 1, 2, 3 ], true ) ) {
+            $query['headingLevel'] = (int) $options['heading_level'];
+        }
+
+        if ( ! empty( $options['hide'] ) ) {
+            $hide = is_array( $options['hide'] ) ? $options['hide'] : explode( ',', (string) $options['hide'] );
+            $hide = array_filter( array_map( 'trim', $hide ) );
+            if ( ! empty( $hide ) ) {
+                $query['hide'] = implode( ',', $hide );
+            }
+        }
+
+        return $query;
     }
 
     private static function log_api_failure( string $url, string $reason ): void {
