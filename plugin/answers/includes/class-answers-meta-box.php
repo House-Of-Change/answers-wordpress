@@ -42,9 +42,7 @@ class Answers_Meta_Box {
             />
         </p>
         <p class="description">
-            Enter the published feed ID to display on this page. Local sample
-            feeds: blue-snowboard-faqs, red-snowboard-faqs, green-jacket-faqs,
-            returns-shipping, general-store-faqs
+            Enter the published feed ID to display on this page.
         </p>
         <?php
     }

@@ -99,17 +99,24 @@ class Answers_Data_Provider {
         $url = trailingslashit( $api_url ) . urlencode( $feed_id );
         $url = add_query_arg( self::build_query_args( $options ), $url );
 
+        // A TTL of 0 (or less) means "don't cache" — fetch fresh every time.
+        // (WordPress treats set_transient( …, 0 ) as *never expire*, which
+        // would otherwise pin stale HTML in place after a re-publish.)
+        $ttl           = (int) get_option( 'answers_cache_ttl', 3600 );
+        $cache_enabled = $ttl > 0;
+
         // Key the cache on the full request URL so different option
         // combinations (and different feeds) never share a cached entry.
         $cache_key = 'answers_html_' . md5( $url );
-        $cached    = get_transient( $cache_key );
 
-        if ( is_string( $cached ) ) {
-            return $cached;
+        if ( $cache_enabled ) {
+            $cached = get_transient( $cache_key );
+            if ( is_string( $cached ) ) {
+                return $cached;
+            }
         }
 
         $api_key = get_option( 'answers_api_key', '' );
-        $ttl     = (int) get_option( 'answers_cache_ttl', 3600 );
 
         $args = [
             'timeout' => 10,
@@ -143,7 +150,9 @@ class Answers_Data_Provider {
 
         $html = $decoded['html'];
 
-        set_transient( $cache_key, $html, $ttl );
+        if ( $cache_enabled ) {
+            set_transient( $cache_key, $html, $ttl );
+        }
 
         return $html;
     }
@@ -151,19 +160,23 @@ class Answers_Data_Provider {
     /**
      * Translate shortcode-style options into publish-feed query args.
      *
-     * `format=html` is always set. Every other option is forwarded only when
-     * present and valid; anything omitted (or invalid) is left out so the API
-     * applies the publisher's default preset rather than a plugin-side guess.
+     * `format=html` and `variant=embedded` are always set: we need the
+     * embeddable fragment (no <html>/<head> chrome) so the markup can be
+     * injected into a page — `standalone` returns a full document and is only
+     * honored when a shortcode explicitly asks for it. Every other option is
+     * forwarded only when present and valid; anything omitted (or invalid) is
+     * left out so the API applies the publisher's default preset.
      */
     private static function build_query_args( array $options ): array {
         $query = [ 'format' => 'html' ];
 
+        // Default to the embeddable fragment; allow an explicit override.
+        $query['variant'] = ( ! empty( $options['variant'] ) && in_array( $options['variant'], [ 'embedded', 'standalone' ], true ) )
+            ? $options['variant']
+            : 'embedded';
+
         if ( ! empty( $options['slug'] ) ) {
             $query['slug'] = (string) $options['slug'];
-        }
-
-        if ( ! empty( $options['variant'] ) && in_array( $options['variant'], [ 'embedded', 'standalone' ], true ) ) {
-            $query['variant'] = $options['variant'];
         }
 
         if ( ! empty( $options['styling'] ) && in_array( $options['styling'], [ 'scoped', 'full', 'none' ], true ) ) {

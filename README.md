@@ -64,7 +64,7 @@ Place a feed anywhere with the `[answers_faq]` shortcode. Only `id` is required 
 |---|---|---|---|
 | `id` *(required)* | path | feed UUID | Which published feed to render. Falls back to the **Default Feed ID** setting if omitted. |
 | `slug` | `slug` | entity slug | Pick one entity from a multi-entity feed. Defaults to the feed's primary (first) entity. |
-| `variant` | `variant` | `embedded`, `standalone` | `embedded` returns an injectable HTML fragment (no `<html>`/`<head>`). `standalone` returns a **complete HTML document** — only use it for a dedicated page, never inside existing content. |
+| `variant` | `variant` | `embedded` *(default)*, `standalone` | The plugin always requests `embedded` — an injectable HTML fragment (no `<html>`/`<head>`). `standalone` returns a **complete HTML document** — only use it for a dedicated page, never inside existing content. |
 | `styling` | `styling` | `scoped`, `full`, `none` | `scoped` ships only structural, `.ep-`-prefixed CSS so your theme's typography flows through (recommended for embedding). `full` ships the complete stylesheet — ⚠️ it contains global selectors (`*`, `body`, `h2`, …) that **restyle the host page**, so reserve it for `standalone`. `none` ships no CSS. |
 | `heading_level` | `headingLevel` | `1`, `2`, `3` | Top heading level for the rendered block — set `2` or `3` to nest correctly under the page's existing `<h1>`. |
 | `hide` | `hide` | comma-separated section keys | Hide sections from this placement. Can only **hide** sections the publisher included — it can never reveal content the publisher excluded. |
@@ -104,9 +104,11 @@ plugin/answers/
 
 1. Go to **Settings > Answers by info.link** in WP Admin
 2. Enter the **API URL** (the publish base, e.g. `https://answers.info.link/api/publish`) and **API Key**
-3. The data provider fetches each feed from `{API URL}/{id}?format=html` and injects the returned HTML, with transient caching (configurable TTL)
+3. The data provider fetches each feed from `{API URL}/{id}?format=html&variant=embedded` and injects the returned HTML, with transient caching (configurable TTL)
 
-The plugin always requests `format=html`; presentation is otherwise driven by the publisher's default preset unless a [shortcode option](#shortcode) overrides it. The local JSON sample serves as a fallback if the API is unreachable.
+The plugin always requests `format=html&variant=embedded` (the injectable fragment); presentation is otherwise driven by the publisher's default preset unless a [shortcode option](#shortcode) overrides it. The local JSON sample serves as a fallback if the API is unreachable.
+
+**Cache Duration (TTL):** rendered HTML is cached in a transient keyed by the full request URL. Set the TTL to **`0` to disable caching** (every view fetches fresh — useful while iterating on published content); any value `> 0` caches for that many seconds. Note that re-publishing a feed won't be reflected until the cached entry expires, so lower the TTL (or set `0`) when testing changes.
 
 ## Releasing & Client Distribution
 
