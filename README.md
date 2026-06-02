@@ -73,6 +73,18 @@ Place a feed anywhere with the `[answers_faq]` shortcode. Only `id` is required 
 
 > Invalid values (e.g. `styling="bogus"`) are dropped rather than sent, so a typo falls back to the publisher's preset instead of erroring.
 
+### Elementor
+
+When [Elementor](https://elementor.com/) is active, the plugin registers an **Answers FAQ** widget (found under the **General** category, or by searching "FAQ"/"Answers"). Drop it onto the canvas and fill the panel:
+
+- **Feed ID** — leave empty to use the **Default Feed ID** setting.
+- **Variant**, **Styling**, **Heading level** — dropdowns matching the [shortcode attributes](#shortcode); each defaults to "Default (publisher preset)", which omits the attribute so the publisher's snapshot preset wins.
+- **Slug**, **Hide** — text fields.
+
+The widget (`includes/class-answers-elementor-widget.php`) only builds the Elementor panel — its `render()` defers to the same `[answers_faq]` shortcode callback, so behavior matches the shortcode exactly. Registration is deliberately defensive (`includes/class-answers-elementor.php`): the widget class loads only after Elementor is confirmed present, so it's a clean no-op when Elementor isn't installed.
+
+> **No widget?** Elementor's **built-in Shortcode widget** runs `[answers_faq …]` reliably and is always available as a fallback — unlike a rich-text editor, it won't mangle quotes.
+
 ### Structured Data
 
 [FAQPage JSON-LD](https://schema.org/FAQPage) is emitted for rich results in Google and machine-readability for AI assistants. The source depends on the mode:
@@ -92,6 +104,8 @@ plugin/answers/
 │   ├── class-answers-renderer.php       # Local-sample HTML output + JSON-LD (fallback only)
 │   ├── class-answers-hooks.php          # Auto-injection via WordPress/WooCommerce hooks
 │   ├── class-answers-shortcode.php      # [answers_faq] shortcode
+│   ├── class-answers-elementor.php          # Registers the Elementor widget (defensive; no-op without Elementor)
+│   ├── class-answers-elementor-widget.php   # Elementor widget — shortcode passthrough
 │   ├── class-answers-admin.php          # Settings page (Settings > Answers by info.link)
 │   └── class-answers-meta-box.php       # Per-post/product feed ID selector
 ├── data/
