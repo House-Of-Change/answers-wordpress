@@ -23,6 +23,7 @@ require_once ANSWERS_PATH . 'includes/class-answers-shortcode.php';
 require_once ANSWERS_PATH . 'includes/class-answers-hooks.php';
 require_once ANSWERS_PATH . 'includes/class-answers-admin.php';
 require_once ANSWERS_PATH . 'includes/class-answers-meta-box.php';
+require_once ANSWERS_PATH . 'includes/class-answers-wpbakery.php';
 require_once ANSWERS_PATH . 'vendor/plugin-update-checker/plugin-update-checker.php';
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
@@ -39,4 +40,5 @@ add_action( 'plugins_loaded', function () {
     Answers_Hooks::init();
     Answers_Admin::init();
     Answers_Meta_Box::init();
+    Answers_WPBakery::init();
 } );
