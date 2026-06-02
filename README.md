@@ -73,6 +73,18 @@ Place a feed anywhere with the `[answers_faq]` shortcode. Only `id` is required 
 
 > Invalid values (e.g. `styling="bogus"`) are dropped rather than sent, so a typo falls back to the publisher's preset instead of erroring.
 
+### WPBakery Page Builder
+
+When [WPBakery Page Builder](https://wpbakery.com/) is active, the plugin registers `[answers_faq]` as a native element so editors place a feed without typing shortcode syntax. In the editor, click **Add Element → Content → Answers FAQ** and fill the form:
+
+- **Feed ID** — leave empty to use the **Default Feed ID** setting.
+- **Variant**, **Styling**, **Heading level** — dropdowns whose values match the [shortcode attributes](#shortcode); each defaults to "Default (publisher preset)", which omits the attribute so the publisher's snapshot preset wins.
+- **Slug**, **Hide** — text fields.
+
+The mapping (`includes/class-answers-wpbakery.php`) only builds the WPBakery form — output is still produced by the same `[answers_faq]` render callback, so behavior matches the shortcode exactly. It's a no-op when WPBakery isn't installed.
+
+> **Not using a page builder?** Use a **Text Block** (or the classic editor), which runs shortcodes. Avoid WPBakery's **Raw HTML** element — it never executes shortcodes, so a pasted `[answers_faq]` renders nothing there.
+
 ### Elementor
 
 When [Elementor](https://elementor.com/) is active, the plugin registers an **Answers FAQ** widget (found under the **General** category, or by searching "FAQ"/"Answers"). Drop it onto the canvas and fill the panel:
@@ -104,6 +116,7 @@ plugin/answers/
 │   ├── class-answers-renderer.php       # Local-sample HTML output + JSON-LD (fallback only)
 │   ├── class-answers-hooks.php          # Auto-injection via WordPress/WooCommerce hooks
 │   ├── class-answers-shortcode.php      # [answers_faq] shortcode
+│   ├── class-answers-wpbakery.php       # Maps [answers_faq] as a WPBakery element (no-op without WPBakery)
 │   ├── class-answers-elementor.php          # Registers the Elementor widget (defensive; no-op without Elementor)
 │   ├── class-answers-elementor-widget.php   # Elementor widget — shortcode passthrough
 │   ├── class-answers-admin.php          # Settings page (Settings > Answers by info.link)
