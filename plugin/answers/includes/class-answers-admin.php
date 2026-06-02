@@ -25,7 +25,7 @@ class Answers_Admin {
         register_setting( 'answers_settings', 'answers_api_url', [
             'type'              => 'string',
             'sanitize_callback' => 'esc_url_raw',
-            'default'           => '',
+            'default'           => 'https://answers.info.link/api/publish',
         ] );
         register_setting( 'answers_settings', 'answers_api_key', [
             'type'              => 'string',
