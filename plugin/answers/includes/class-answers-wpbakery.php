@@ -22,10 +22,10 @@ class Answers_WPBakery {
         }
 
         vc_map( [
-            'name'        => __( 'Answers FAQ', 'answers' ),
+            'name'        => __( 'info.link/answers', 'answers' ),
             'base'        => 'answers_faq',
             'category'    => __( 'Content', 'answers' ),
-            'description' => __( 'AI-crawlable FAQ feed', 'answers' ),
+            'description' => __( 'FAQs that AI chatbots love', 'answers' ),
             'icon'        => 'dashicons-editor-help',
             'params'      => [
                 [
@@ -33,7 +33,7 @@ class Answers_WPBakery {
                     'heading'     => __( 'Feed ID', 'answers' ),
                     'param_name'  => 'id',
                     'admin_label' => true,
-                    'description' => __( 'Leave empty to use the default feed set in Answers settings.', 'answers' ),
+                    'description' => __( 'Leave empty to use the default feed set in info.link/answers settings.', 'answers' ),
                 ],
                 [
                     'type'        => 'textfield',

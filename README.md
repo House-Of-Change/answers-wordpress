@@ -1,4 +1,4 @@
-# Answers – AI Search GEO AEO Plugin — WordPress/WooCommerce Integration
+# info.link/answers – Be visible in ChatGPT and Google AI (GEO, AEO) — WordPress/WooCommerce Integration
 
 A WordPress plugin that renders FAQ content server-side for SEO and LLM crawlability. Includes a Docker-based local development environment with WooCommerce, sample products, and sample FAQ data.
 
@@ -75,7 +75,7 @@ Place a feed anywhere with the `[answers_faq]` shortcode. Only `id` is required 
 
 ### WPBakery Page Builder
 
-When [WPBakery Page Builder](https://wpbakery.com/) is active, the plugin registers `[answers_faq]` as a native element so editors place a feed without typing shortcode syntax. In the editor, click **Add Element → Content → Answers FAQ** and fill the form:
+When [WPBakery Page Builder](https://wpbakery.com/) is active, the plugin registers `[answers_faq]` as a native element so editors place a feed without typing shortcode syntax. In the editor, click **Add Element → Content → info.link/answers** and fill the form:
 
 - **Feed ID** — leave empty to use the **Default Feed ID** setting.
 - **Variant**, **Styling**, **Heading level** — dropdowns whose values match the [shortcode attributes](#shortcode); each defaults to "Default (publisher preset)", which omits the attribute so the publisher's snapshot preset wins.
@@ -87,7 +87,7 @@ The mapping (`includes/class-answers-wpbakery.php`) only builds the WPBakery for
 
 ### Elementor
 
-When [Elementor](https://elementor.com/) is active, the plugin registers an **Answers FAQ** widget (found under the **General** category, or by searching "FAQ"/"Answers"). Drop it onto the canvas and fill the panel:
+When [Elementor](https://elementor.com/) is active, the plugin registers an **info.link/answers** widget (found under the **General** category, or by searching "FAQ"/"Answers"). Drop it onto the canvas and fill the panel:
 
 - **Feed ID** — leave empty to use the **Default Feed ID** setting.
 - **Variant**, **Styling**, **Heading level** — dropdowns matching the [shortcode attributes](#shortcode); each defaults to "Default (publisher preset)", which omits the attribute so the publisher's snapshot preset wins.
@@ -119,7 +119,7 @@ plugin/answers/
 │   ├── class-answers-wpbakery.php       # Maps [answers_faq] as a WPBakery element (no-op without WPBakery)
 │   ├── class-answers-elementor.php          # Registers the Elementor widget (defensive; no-op without Elementor)
 │   ├── class-answers-elementor-widget.php   # Elementor widget — shortcode passthrough
-│   ├── class-answers-admin.php          # Settings page (Settings > Answers by info.link)
+│   ├── class-answers-admin.php          # Settings page (Settings > info.link/answers)
 │   └── class-answers-meta-box.php       # Per-post/product feed ID selector
 ├── data/
 │   └── sample-faqs.json               # Local sample feeds keyed by ID (offline fallback)
@@ -129,7 +129,7 @@ plugin/answers/
 
 ### Connecting to the Verified Answers API
 
-1. Go to **Settings > Answers by info.link** in WP Admin
+1. Go to **Settings > info.link/answers** in WP Admin
 2. Enter the **API URL** (the publish base, e.g. `https://answers.info.link/api/publish`) and **API Key**
 3. The data provider fetches each feed from `{API URL}/{id}?format=html&variant=embedded` and injects the returned HTML, with transient caching (configurable TTL)
 

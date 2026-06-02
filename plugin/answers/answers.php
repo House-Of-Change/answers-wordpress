@@ -1,7 +1,7 @@
 <?php
 /**
- * Plugin Name: Answers – AI Search GEO AEO Plugin
- * Description: Renders FAQ content server-side for SEO and LLM crawlability. Supports WooCommerce product tabs, shortcodes, and automatic content injection.
+ * Plugin Name: info.link/answers – Be visible in ChatGPT and Google AI (GEO, AEO)
+ * Description: Get your content cited by AI chatbots like ChatGPT and Google AI. Server-side FAQ rendering optimized for AI search, SEO, and WooCommerce.
  * Version: 1.0.0
  * Plugin URI: https://github.com/House-Of-Change/answers-wordpress
  * Update URI: https://github.com/House-Of-Change/answers-wordpress

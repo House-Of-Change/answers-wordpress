@@ -19,7 +19,7 @@ class Answers_Elementor_Widget extends \Elementor\Widget_Base {
     }
 
     public function get_title(): string {
-        return __( 'Answers FAQ', 'answers' );
+        return __( 'info.link/answers', 'answers' );
     }
 
     public function get_icon(): string {
@@ -36,14 +36,14 @@ class Answers_Elementor_Widget extends \Elementor\Widget_Base {
 
     protected function register_controls(): void {
         $this->start_controls_section( 'answers_section', [
-            'label' => __( 'Answers FAQ', 'answers' ),
+            'label' => __( 'info.link/answers', 'answers' ),
         ] );
 
         $this->add_control( 'id', [
             'label'       => __( 'Feed ID', 'answers' ),
             'type'        => \Elementor\Controls_Manager::TEXT,
             'label_block' => true,
-            'description' => __( 'Leave empty to use the default feed set in Answers settings.', 'answers' ),
+            'description' => __( 'Leave empty to use the default feed set in info.link/answers settings.', 'answers' ),
         ] );
 
         $this->add_control( 'slug', [
