@@ -17,6 +17,12 @@ define( 'ANSWERS_VERSION', '1.0.0' );
 define( 'ANSWERS_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ANSWERS_URL', plugin_dir_url( __FILE__ ) );
 
+// The hosted publish endpoint the plugin ships pointed at. Used everywhere the
+// API URL is read so an unconfigured site still works out of the box; the
+// publisher can change it (or clear it to fall back to the local JSON) from the
+// settings page.
+define( 'ANSWERS_DEFAULT_API_URL', 'https://answers.info.link/api/publish' );
+
 require_once ANSWERS_PATH . 'includes/class-answers-data-provider.php';
 require_once ANSWERS_PATH . 'includes/class-answers-renderer.php';
 require_once ANSWERS_PATH . 'includes/class-answers-shortcode.php';
@@ -35,6 +41,14 @@ $answers_update_checker = PucFactory::buildUpdateChecker(
     'answers'
 );
 $answers_update_checker->getVcsApi()->enableReleaseAssets();
+
+// Persist the default API URL on first activation so it shows as a real,
+// editable value in the settings field rather than a placeholder. add_option()
+// is a no-op when the option already exists, so it never overwrites a value the
+// publisher has changed or deliberately cleared.
+register_activation_hook( __FILE__, function () {
+    add_option( 'answers_api_url', ANSWERS_DEFAULT_API_URL );
+} );
 
 add_action( 'plugins_loaded', function () {
     Answers_Shortcode::init();

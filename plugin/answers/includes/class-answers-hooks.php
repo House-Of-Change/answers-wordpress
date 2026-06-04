@@ -102,7 +102,7 @@ class Answers_Hooks {
         // When an API URL is configured the pre-rendered HTML carries its own
         // FAQPage JSON-LD (and the local fallback emits it inline), so skip the
         // head injection to avoid duplicate structured data.
-        if ( ! empty( get_option( 'answers_api_url', '' ) ) ) {
+        if ( ! empty( get_option( 'answers_api_url', ANSWERS_DEFAULT_API_URL ) ) ) {
             return;
         }
 
