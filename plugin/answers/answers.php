@@ -2,7 +2,7 @@
 /**
  * Plugin Name: info.link/answers – Be visible in ChatGPT and Google AI (GEO, AEO)
  * Description: Get your content cited by AI chatbots like ChatGPT and Google AI. Server-side FAQ rendering optimized for AI search, SEO, and WooCommerce.
- * Version: 1.0.0
+ * Version: 1.0.9
  * Plugin URI: https://github.com/House-Of-Change/answers-wordpress
  * Update URI: https://github.com/House-Of-Change/answers-wordpress
  * Author: info.link
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'ANSWERS_VERSION', '1.0.0' );
+define( 'ANSWERS_VERSION', '1.0.9' );
 define( 'ANSWERS_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ANSWERS_URL', plugin_dir_url( __FILE__ ) );
 
