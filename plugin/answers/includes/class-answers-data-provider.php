@@ -26,7 +26,7 @@ class Answers_Data_Provider {
      *                        absent defers to the published default preset.
      */
     public static function get_faq_html( string $feed_id, array $options = [] ): string {
-        $api_url = get_option( 'answers_api_url', '' );
+        $api_url = get_option( 'answers_api_url', ANSWERS_DEFAULT_API_URL );
 
         if ( ! empty( $api_url ) ) {
             $html = self::get_html_from_api( $feed_id, $api_url, $options );
