@@ -42,7 +42,6 @@ class Answers_Admin {
             'sanitize_callback' => 'sanitize_text_field',
             'default'           => '',
         ] );
-
         add_settings_section(
             'answers_main_section',
             'API Configuration',
@@ -70,6 +69,7 @@ class Answers_Admin {
             'name'        => 'answers_default_feed',
             'placeholder' => '8da215bd-62a2-45e7-b6b2-70dafae4b57f',
         ] );
+
     }
 
     public static function render_text_field( array $args ): void {
@@ -85,6 +85,10 @@ class Answers_Admin {
             esc_attr( $value ),
             esc_attr( $placeholder )
         );
+
+        if ( ! empty( $args['description'] ) ) {
+            printf( '<p class="description">%s</p>', esc_html( $args['description'] ) );
+        }
     }
 
     public static function render_settings_page(): void {

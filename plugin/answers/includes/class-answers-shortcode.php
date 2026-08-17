@@ -23,11 +23,10 @@ class Answers_Shortcode {
             'hide'          => '',
         ], $atts, 'answers_faq' );
 
-        $feed_id = sanitize_text_field( $atts['id'] );
-        if ( empty( $feed_id ) ) {
-            $feed_id = get_option( 'answers_default_feed', '' );
-        }
-
+        // Explicit attribute, else the post's own id, else the site default —
+        // all of that lives in one place now (Answers_Feed), because per-market
+        // resolution has to happen for every placement or for none.
+        $feed_id = Answers_Feed::resolve( (string) $atts['id'], null, true );
         if ( empty( $feed_id ) ) {
             return '';
         }

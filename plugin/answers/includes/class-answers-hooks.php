@@ -11,6 +11,7 @@ class Answers_Hooks {
         add_filter( 'woocommerce_product_tabs', [ __CLASS__, 'add_product_tab' ] );
         add_action( 'wp_head', [ __CLASS__, 'inject_jsonld' ] );
         add_action( 'wp_enqueue_scripts', [ __CLASS__, 'register_styles' ] );
+        add_action( 'wp_footer', [ 'Answers_Market', 'render_diagnostic' ], 99 );
     }
 
     public static function register_styles(): void {
@@ -22,7 +23,7 @@ class Answers_Hooks {
         );
 
         if ( is_singular() ) {
-            $feed_id = get_post_meta( get_the_ID(), '_answers_feed_id', true );
+            $feed_id = Answers_Feed::resolve();
             if ( ! empty( $feed_id ) ) {
                 wp_enqueue_style( 'answers-style' );
             }
@@ -38,7 +39,7 @@ class Answers_Hooks {
             return $content;
         }
 
-        $feed_id = get_post_meta( get_the_ID(), '_answers_feed_id', true );
+        $feed_id = Answers_Feed::resolve();
         if ( empty( $feed_id ) ) {
             return $content;
         }
@@ -60,7 +61,7 @@ class Answers_Hooks {
             return $tabs;
         }
 
-        $feed_id = get_post_meta( $product->get_id(), '_answers_feed_id', true );
+        $feed_id = Answers_Feed::resolve( '', (int) $product->get_id() );
         if ( empty( $feed_id ) ) {
             return $tabs;
         }
@@ -89,7 +90,7 @@ class Answers_Hooks {
             return;
         }
 
-        $feed_id = get_post_meta( $product->get_id(), '_answers_feed_id', true );
+        $feed_id = Answers_Feed::resolve( '', (int) $product->get_id() );
 
         echo Answers_Data_Provider::get_faq_html( $feed_id );
     }
@@ -106,7 +107,7 @@ class Answers_Hooks {
             return;
         }
 
-        $feed_id = get_post_meta( get_the_ID(), '_answers_feed_id', true );
+        $feed_id = Answers_Feed::resolve();
         if ( empty( $feed_id ) ) {
             return;
         }

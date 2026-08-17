@@ -23,6 +23,8 @@ define( 'ANSWERS_URL', plugin_dir_url( __FILE__ ) );
 // settings page.
 define( 'ANSWERS_DEFAULT_API_URL', 'https://answers.info.link/api/publish' );
 
+require_once ANSWERS_PATH . 'includes/class-answers-market.php';
+require_once ANSWERS_PATH . 'includes/class-answers-feed.php';
 require_once ANSWERS_PATH . 'includes/class-answers-data-provider.php';
 require_once ANSWERS_PATH . 'includes/class-answers-renderer.php';
 require_once ANSWERS_PATH . 'includes/class-answers-shortcode.php';

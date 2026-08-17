@@ -15,3 +15,5 @@ Get your content cited by AI chatbots like ChatGPT and Google AI. Server-side FA
 Search is changing. People now ask ChatGPT and Google’s AI Overviews instead of clicking blue links, and if your content isn’t structured for them, you’re invisible.
 
 info.link/answers makes your FAQ and brand content readable by both traditional search engines and AI chatbots. It renders content server-side (so crawlers and LLMs actually see it), with native WooCommerce product tab support, flexible shortcodes, and automatic content injection. No manual markup required.
+
+**Multilingual sites.** FAQ content is written and reviewed for one market: its product names, its retailers, its claim wording. If your site serves several languages from the same pages, for example through TranslatePress, WPML or Polylang, the plugin recognises which language a visitor is on and will not put content written for one market onto the pages of another. There is nothing to set up for this in WordPress: which language gets which content is handled with your info.link team.

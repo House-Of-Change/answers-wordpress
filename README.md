@@ -112,6 +112,8 @@ Verify with: `curl -s http://localhost:8080/product/blue-snowboard/ | grep 'appl
 plugin/answers/
 ├── answers.php                         # Bootstrap, constants, hook registration
 ├── includes/
+│   ├── class-answers-market.php         # Which market is this request, and may a base-market feed render in it
+│   ├── class-answers-feed.php           # THE feed-id resolver (attribute → post meta → default); filter seam for per-market feeds
 │   ├── class-answers-data-provider.php  # Fetches rendered HTML from the publish feed; local JSON fallback
 │   ├── class-answers-renderer.php       # Local-sample HTML output + JSON-LD (fallback only)
 │   ├── class-answers-hooks.php          # Auto-injection via WordPress/WooCommerce hooks
@@ -136,6 +138,78 @@ plugin/answers/
 The plugin always requests `format=html&variant=embedded` (the injectable fragment); presentation is otherwise driven by the publisher's default preset unless a [shortcode option](#shortcode) overrides it. The local JSON sample serves as a fallback if the API is unreachable.
 
 **Cache Duration (TTL):** rendered HTML is cached in a transient keyed by the full request URL. Set the TTL to **`0` to disable caching** (every view fetches fresh — useful while iterating on published content); any value `> 0` caches for that many seconds. Note that re-publishing a feed won't be reflected until the cached entry expires, so lower the TTL (or set `0`) when testing changes.
+
+### Languages and markets
+
+A feed is written for one market. Its product names, retailer facts and claim
+wording are reviewed for that market, and its structured data is anchored to that
+market's URL, so the same fragment on another language's rendering of the page is
+not "untranslated", it is wrong. Translation plugins make that easy to hit without
+anyone deciding to: TranslatePress, WPML and Polylang commonly render **one** post
+at several language URLs, so a block placed once appears in every language and
+cannot be removed from a page that does not exist as a post.
+
+**The split.** The plugin detects a fact and sends it; the platform holds every
+policy. There are deliberately **no market settings in WordPress**: we may not have
+admin access to a client's site, and a setting a client has to find is a setting
+that delays their pages being right.
+
+- The plugin resolves the current market (TranslatePress → WPML → Polylang →
+  `determine_locale()`) and sends it with every feed request as `market`, together
+  with `pageUrl`.
+- The platform decides which feed that market gets. Today's API ignores both
+  parameters, so a second language can ship later with **no plugin update on any
+  client site**.
+- The plugin holds one rule it cannot delegate, because it is about the response
+  in its hand: render the fragment unless the fragment says it belongs to a market
+  that is not this one. The signal is `meta.market` when the platform sends it
+  (`"*"` means "safe in any market"), else the `inLanguage` in the fragment's own
+  JSON-LD.
+
+Two rules worth knowing before changing this:
+
+- **Unknown is not "other".** An unplaceable request, or a fragment that declares
+  no market, renders. Only a positive mismatch withholds anything, so no
+  single-language site changed behaviour when this shipped and no client's pages
+  depend on a field the platform may not be sending yet.
+- **URLs are never guessed at.** `/it/` is Italian on one site and IT services on
+  another, and guessing wrong withholds a block from a page that was fine. The
+  page URL is sent to the platform instead, which resolves it with that tenant's
+  configuration in front of it.
+
+**Filters:**
+
+```php
+// Override the detected market (custom router, headless front end, a plugin we
+// have not met). Return '' for "unknown", which renders.
+add_filter( 'answers_current_market', fn( $market, $source ) => 'nl-NL', 10, 2 );
+
+// Map a placement to a different feed. Return '' to render nothing.
+add_filter( 'answers_feed_id', function ( $feed_id, $market ) {
+    return $market === 'nl-NL' ? 'the-dutch-feed-id' : $feed_id;
+}, 10, 2 );
+```
+
+When a fragment is withheld, the footer carries an HTML comment naming the market
+of the request, how it was detected, and the market the content was for. That is
+the fastest answer to "where did my FAQ go", and it makes the behaviour verifiable
+with `curl` rather than a screen share.
+
+**Knowing what a client runs.** Every API fetch sends `X-Answers-Plugin: <version>`,
+because the stylesheet's `?ver=` query string is the only other remote signal and
+caching plugins strip it (on two of four live installs it is already gone).
+
+**Verifying a change here.** The pure logic has a harness that needs neither
+WordPress nor Docker:
+
+```bash
+php tests/market-logic-test.php
+```
+
+End to end, use the Docker environment with a translation plugin installed
+(TranslatePress is the one this was built against): assign a feed to a page, then
+`curl` the base-language URL and a translated URL. The first carries the block, the
+second carries the footer comment and no block.
 
 ## Releasing & Client Distribution
 
