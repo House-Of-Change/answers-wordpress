@@ -130,6 +130,12 @@ class Answers_Market {
             }
         }
 
+        // NOTE, and it matters: $html is the FRAGMENT the API returned, never the
+        // page. A client's own SEO plugin emits inLanguage too — Guhl's Dutch
+        // rendering carries "nl-NL" from Yoast right next to our "de" — so
+        // reading this at page level would find the host's language, match it
+        // against itself, and render everything forever. Verified against the
+        // live API: a fragment's inLanguage values are all ours and all agree.
         if ( preg_match( '/"inLanguage"\s*:\s*"([A-Za-z_-]{2,10})"/', $html, $m ) ) {
             return self::normalise( $m[1] );
         }
