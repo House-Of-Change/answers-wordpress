@@ -130,6 +130,12 @@ class Answers_Data_Provider {
             'timeout' => 10,
             'headers' => [
                 'Accept' => 'application/json',
+                // Which plugin version asked. Read from our own logs, this is
+                // the only reliable way to know what a client is actually
+                // running: the stylesheet's ?ver= query string is the other
+                // signal and caching plugins strip it, so on two of four live
+                // installs it is already gone.
+                'X-Answers-Plugin' => ANSWERS_VERSION,
             ],
         ];
 

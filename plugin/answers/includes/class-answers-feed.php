@@ -38,8 +38,20 @@ class Answers_Feed {
      *                           publisher who typed an id meant it.
      * @param int|null $post_id  Post to read the meta field from; defaults to
      *                           the post in the current loop.
+     * @param bool     $allow_site_default Fall back to the site-wide default
+     *                           feed. TRUE only for DELIBERATE placements: a
+     *                           shortcode or a page-builder element is someone
+     *                           asking for a feed here, so "which one" may fall
+     *                           back to the site default. The auto-injection
+     *                           paths (content filter, product tab) must NOT:
+     *                           they run on every singular view, so a site with
+     *                           a default feed configured would grow a FAQ block
+     *                           on every page and product that has no id of its
+     *                           own. That is not what the option ever meant, and
+     *                           it is how a refactor of a five-copy meta read
+     *                           quietly becomes an outage.
      */
-    public static function resolve( string $explicit = '', ?int $post_id = null ): string {
+    public static function resolve( string $explicit = '', ?int $post_id = null, bool $allow_site_default = false ): string {
         $feed_id = sanitize_text_field( $explicit );
 
         if ( $feed_id === '' ) {
@@ -47,7 +59,7 @@ class Answers_Feed {
             $feed_id = self::id_for_post( (int) $id );
         }
 
-        if ( $feed_id === '' ) {
+        if ( $feed_id === '' && $allow_site_default ) {
             $feed_id = sanitize_text_field( (string) get_option( 'answers_default_feed', '' ) );
         }
 

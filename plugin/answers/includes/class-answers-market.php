@@ -75,15 +75,61 @@ class Answers_Market {
     }
 
     /**
-     * The market the publisher's feeds are written for. Defaults to the site's
-     * own locale, which is right for every single-language site and is the
-     * value a publisher would otherwise have to retype.
+     * The market the publisher's feeds are written for.
+     *
+     * NOT get_locale() first, and that is the whole point. TranslatePress, WPML
+     * and Polylang all filter `locale` to the language of the CURRENT request,
+     * so on precisely the sites this class exists for, get_locale() returns
+     * "nl_NL" while serving the Dutch rendering of German content. Deriving the
+     * base from it would make base equal current on every request, the
+     * comparison would always match, and the gate would be silently inert while
+     * looking configured. So we ask each translation plugin for its DEFAULT
+     * language, then the raw site-language option (which they do not filter),
+     * and only then the runtime locale, which is correct for a site with no
+     * translation layer at all.
      */
     public static function base(): string {
         $declared = self::normalise( (string) get_option( 'answers_base_market', '' ) );
         if ( $declared !== '' ) {
             return $declared;
         }
+
+        // TranslatePress keeps its default language in its own settings array.
+        $trp = get_option( 'trp_settings', [] );
+        if ( is_array( $trp ) && ! empty( $trp['default-language'] ) && is_string( $trp['default-language'] ) ) {
+            $tag = self::normalise( $trp['default-language'] );
+            if ( $tag !== '' ) {
+                return $tag;
+            }
+        }
+
+        // WPML.
+        $wpml_default = apply_filters( 'wpml_default_language', null );
+        if ( is_string( $wpml_default ) && $wpml_default !== '' ) {
+            $tag = self::normalise( $wpml_default );
+            if ( $tag !== '' ) {
+                return $tag;
+            }
+        }
+
+        // Polylang.
+        if ( function_exists( 'pll_default_language' ) ) {
+            $tag = self::normalise( (string) pll_default_language( 'locale' ) );
+            if ( $tag !== '' ) {
+                return $tag;
+            }
+        }
+
+        // The site-language option as stored, unfiltered by any of the above.
+        $wplang = get_option( 'WPLANG', '' );
+        if ( is_string( $wplang ) && $wplang !== '' ) {
+            $tag = self::normalise( $wplang );
+            if ( $tag !== '' ) {
+                return $tag;
+            }
+        }
+
+        // A site with no translation layer: the runtime locale IS the base.
         return self::normalise( get_locale() );
     }
 

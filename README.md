@@ -173,9 +173,22 @@ Two rules worth knowing before changing this:
   detection matches only the prefixes a publisher declared under
   *Language URL prefixes*.
 
+**The base market is NOT `get_locale()`.** Every translation plugin filters
+`locale` to the current request's language, so on the sites this exists for
+`get_locale()` returns `nl_NL` while serving the Dutch rendering of German
+content. Base is resolved as: the explicit setting → TranslatePress
+`trp_settings['default-language']` → WPML `wpml_default_language` → Polylang
+`pll_default_language( 'locale' )` → the raw `WPLANG` option → `get_locale()`.
+Skip that and the gate looks configured while comparing a value against itself.
+
 **Settings** (Settings > info.link/answers, "Languages and markets"): content
-language (defaults to the site locale), behaviour on other languages
+language (defaults to the ladder above), behaviour on other languages
 (`none`, the default, or `base`), and the optional URL prefixes.
+
+**Knowing what a client runs.** Every API fetch sends
+`X-Answers-Plugin: <version>`, because the stylesheet's `?ver=` query string is
+the only other remote signal and caching plugins strip it (on two of four live
+installs it is already gone).
 
 **Filters:**
 

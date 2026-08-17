@@ -20,6 +20,8 @@ define( 'ABSPATH', __DIR__ );
 $GLOBALS['stub_options'] = [];
 $GLOBALS['stub_locale']  = 'de_DE';
 $GLOBALS['stub_admin']   = false;
+$GLOBALS['stub_post_id'] = 0;
+$GLOBALS['stub_meta']    = [];
 
 function get_option( $name, $default = false ) {
     return $GLOBALS['stub_options'][ $name ] ?? $default;
@@ -47,11 +49,18 @@ function sanitize_text_field( $text ) {
 function wp_unslash( $value ) {
     return $value;
 }
+function get_the_ID() {
+    return $GLOBALS['stub_post_id'] ?? 0;
+}
+function get_post_meta( $post_id, $key, $single = false ) {
+    return $GLOBALS['stub_meta'][ $post_id ][ $key ] ?? '';
+}
 function wp_parse_url( $url, $component = -1 ) {
     return $component === -1 ? parse_url( $url ) : parse_url( $url, $component );
 }
 
 require_once __DIR__ . '/../plugin/answers/includes/class-answers-market.php';
+require_once __DIR__ . '/../plugin/answers/includes/class-answers-feed.php';
 
 $failures = 0;
 $checks   = 0;
@@ -156,6 +165,43 @@ Answers_Market::render_diagnostic();
 $comment = ob_get_clean();
 check( 'the comment counts placements', true, strpos( $comment, '2 FAQ block(s) not rendered' ) !== false );
 check( 'the comment names both markets', true, strpos( $comment, 'nl-NL' ) !== false && strpos( $comment, 'de-DE' ) !== false );
+
+// ─── base market on a translated site ────────────────────────────────────────
+//
+// The regression these guard: every translation plugin filters `locale` to the
+// CURRENT request's language, so a base derived from get_locale() equals the
+// current market on every request and the gate does nothing at all.
+
+reset_request( [ 'trp_settings' => [ 'default-language' => 'de_DE' ] ], 'nl_NL' );
+check( 'TranslatePress default language wins over the runtime locale', 'de-DE', Answers_Market::base() );
+check( '…so a Dutch rendering of German content is suppressed', false, Answers_Market::may_render() );
+
+reset_request( [ 'WPLANG' => 'de_DE' ], 'nl_NL' );
+check( 'the raw site-language option is preferred over the filtered locale', 'de-DE', Answers_Market::base() );
+
+reset_request( [ 'answers_base_market' => 'en-GB', 'WPLANG' => 'de_DE' ], 'nl_NL' );
+check( 'an explicit setting still wins over everything', 'en-GB', Answers_Market::base() );
+
+reset_request( [], 'de_DE' );
+check( 'no translation layer: the runtime locale IS the base', 'de-DE', Answers_Market::base() );
+
+// ─── feed resolution ─────────────────────────────────────────────────────────
+//
+// The site-wide default feed must reach DELIBERATE placements only. Applied to
+// the auto-injection paths it would add a FAQ block to every page and product
+// on a site that configured one, which is an outage dressed as a refactor.
+
+$GLOBALS['stub_post_id'] = 7;
+reset_request( [ 'answers_default_feed' => 'site-wide-feed' ], 'de_DE' );
+$GLOBALS['stub_meta'] = [];
+check( 'auto-injection does NOT fall back to the site default', '', Answers_Feed::resolve() );
+check( 'a shortcode DOES', 'site-wide-feed', Answers_Feed::resolve( '', null, true ) );
+
+$GLOBALS['stub_meta'] = [ 7 => [ '_answers_feed_id' => 'the-posts-own-feed' ] ];
+check( "the post's own id is used where present", 'the-posts-own-feed', Answers_Feed::resolve() );
+check( 'an explicit id beats the post meta', 'typed-in-the-shortcode', Answers_Feed::resolve( 'typed-in-the-shortcode' ) );
+$GLOBALS['stub_post_id'] = 0;
+$GLOBALS['stub_meta']    = [];
 
 printf( "\n%d checks, %d failure(s)\n", $checks, $failures );
 exit( $failures === 0 ? 0 : 1 );
