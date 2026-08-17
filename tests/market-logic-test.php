@@ -113,77 +113,56 @@ check( 'documented phase-0 limit: de-AT counts as de-DE', true, Answers_Market::
 check( 'different languages do not match', false, Answers_Market::same_market( 'nl-NL', 'de-DE' ) );
 check( 'unknown matches anything (unknown renders)', true, Answers_Market::same_market( '', 'de-DE' ) );
 
-// ─── the decision ────────────────────────────────────────────────────────────
+// ─── what market a fragment belongs to ───────────────────────────────────────
 
-reset_request();
-check( 'site locale = base market renders', true, Answers_Market::may_render() );
-check( '…and says why', 'base-market', Answers_Market::decide()['reason'] );
+$de_fragment = '<div><script type="application/ld+json">{"@graph":[{"inLanguage":"de","@type":"FAQPage"}]}</script></div>';
+$bare        = '<div>no structured data here</div>';
 
-reset_request( [ 'answers_base_market' => 'de-DE' ], 'nl_NL' );
-check( 'a foreign site locale is suppressed', false, Answers_Market::may_render() );
-check( '…and names the market it withheld from', 'nl-NL', Answers_Market::decide()['market'] );
+check( 'meta.market is trusted first', 'nl-NL', Answers_Market::market_of( [ 'market' => 'nl_NL' ], $de_fragment ) );
+check( 'the platform can mark content as safe anywhere', '', Answers_Market::market_of( [ 'market' => '*' ], $de_fragment ) );
+check( 'without meta.market, the fragment\'s inLanguage answers', 'de', Answers_Market::market_of( [], $de_fragment ) );
+check( 'a fragment that declares nothing is unknown', '', Answers_Market::market_of( [], $bare ) );
 
-reset_request( [ 'answers_base_market' => 'de-DE', 'answers_market_fallback' => 'base' ], 'nl_NL' );
-check( 'the publisher can opt into serving base anyway', true, Answers_Market::may_render() );
-check( '…and the reason records that it was a choice', 'fallback-base', Answers_Market::decide()['reason'] );
+// ─── the decision, driven by the response ────────────────────────────────────
 
-reset_request( [ 'answers_base_market' => 'de-DE', 'answers_market_fallback' => 'nonsense' ], 'nl_NL' );
-check( 'an unrecognised fallback value is treated as none', false, Answers_Market::may_render() );
+reset_request( [], 'de_DE' );
+check( 'German request, German fragment: renders', true, Answers_Market::may_render( [], $de_fragment ) );
 
-reset_request( [ 'answers_base_market' => 'shop' ], 'de_DE' );
-check( 'an unparseable declared base falls back to the site locale', 'de-DE', Answers_Market::base() );
+reset_request( [], 'nl_NL' );
+check( 'Dutch request, German fragment: withheld', false, Answers_Market::may_render( [], $de_fragment ) );
 
-// URL detection: only for declared prefixes.
-reset_request( [ 'answers_base_market' => 'de-DE', 'answers_market_prefixes' => 'nl, fr-BE' ], 'de_DE', '/nl/produkt/x/' );
-check( 'a declared URL prefix is detected', 'nl', Answers_Market::current()['market'] );
-check( '…via the url source', 'url', Answers_Market::current()['source'] );
-check( '…and suppresses', false, Answers_Market::may_render() );
+reset_request( [], 'nl_NL' );
+check( 'Dutch request, Dutch fragment: renders', true, Answers_Market::may_render( [ 'market' => 'nl-NL' ], $de_fragment ) );
 
-reset_request( [ 'answers_base_market' => 'de-DE', 'answers_market_prefixes' => 'nl' ], 'de_DE', '/it/services/' );
-check( 'an UNdeclared two-letter path is NOT guessed at', 'de-DE', Answers_Market::current()['market'] );
-check( '…so a page that only looks translated still renders', true, Answers_Market::may_render() );
+reset_request( [], 'nl_NL' );
+check( 'a fragment declaring nothing renders anywhere', true, Answers_Market::may_render( [], $bare ) );
 
-reset_request( [ 'answers_base_market' => 'de-DE', 'answers_market_prefixes' => 'nl' ], 'de_DE', '/produkt/x/', 'nl.example.com' );
-check( 'a declared prefix also matches a subdomain', 'nl', Answers_Market::current()['market'] );
+reset_request( [], 'nl_NL' );
+check( 'the wildcard renders anywhere', true, Answers_Market::may_render( [ 'market' => '*' ], $de_fragment ) );
 
-reset_request( [ 'answers_base_market' => 'de-DE' ], 'nl_NL' );
+reset_request( [], 'de_AT' );
+check( 'a region variant of the same language renders', true, Answers_Market::may_render( [ 'market' => 'de-DE' ], $de_fragment ) );
+
+reset_request( [], 'nl_NL' );
 $GLOBALS['stub_admin'] = true;
-check( 'wp-admin always renders, whatever the locale says', true, Answers_Market::may_render() );
+check( 'wp-admin always renders, whatever the locale says', true, Answers_Market::may_render( [], $de_fragment ) );
 $GLOBALS['stub_admin'] = false;
 
 // ─── the diagnostic ──────────────────────────────────────────────────────────
 
-reset_request( [ 'answers_base_market' => 'de-DE' ], 'nl_NL' );
+reset_request( [], 'de_DE' );
 ob_start();
 Answers_Market::render_diagnostic();
 check( 'nothing withheld yet, nothing to explain', '', ob_get_clean() );
 
-Answers_Market::note_suppressed();
-Answers_Market::note_suppressed();
+reset_request( [], 'nl_NL' );
+Answers_Market::may_render( [], $de_fragment );
+Answers_Market::may_render( [], $de_fragment );
 ob_start();
 Answers_Market::render_diagnostic();
 $comment = ob_get_clean();
-check( 'the comment counts placements', true, strpos( $comment, '2 FAQ block(s) not rendered' ) !== false );
-check( 'the comment names both markets', true, strpos( $comment, 'nl-NL' ) !== false && strpos( $comment, 'de-DE' ) !== false );
-
-// ─── base market on a translated site ────────────────────────────────────────
-//
-// The regression these guard: every translation plugin filters `locale` to the
-// CURRENT request's language, so a base derived from get_locale() equals the
-// current market on every request and the gate does nothing at all.
-
-reset_request( [ 'trp_settings' => [ 'default-language' => 'de_DE' ] ], 'nl_NL' );
-check( 'TranslatePress default language wins over the runtime locale', 'de-DE', Answers_Market::base() );
-check( '…so a Dutch rendering of German content is suppressed', false, Answers_Market::may_render() );
-
-reset_request( [ 'WPLANG' => 'de_DE' ], 'nl_NL' );
-check( 'the raw site-language option is preferred over the filtered locale', 'de-DE', Answers_Market::base() );
-
-reset_request( [ 'answers_base_market' => 'en-GB', 'WPLANG' => 'de_DE' ], 'nl_NL' );
-check( 'an explicit setting still wins over everything', 'en-GB', Answers_Market::base() );
-
-reset_request( [], 'de_DE' );
-check( 'no translation layer: the runtime locale IS the base', 'de-DE', Answers_Market::base() );
+check( 'the comment counts what it withheld', true, strpos( $comment, '2 FAQ block(s) withheld' ) !== false );
+check( 'the comment names both markets', true, strpos( $comment, 'nl-NL' ) !== false && strpos( $comment, 'for de' ) !== false );
 
 // ─── feed resolution ─────────────────────────────────────────────────────────
 //

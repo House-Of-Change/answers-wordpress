@@ -26,14 +26,6 @@ class Answers_Data_Provider {
      *                        absent defers to the published default preset.
      */
     public static function get_faq_html( string $feed_id, array $options = [] ): string {
-        // THE choke point for the market gate: the content filter, the product
-        // tab, the shortcode and both page-builder elements all arrive here, so
-        // a market decision made once cannot be missed by one of them.
-        if ( ! Answers_Market::may_render() ) {
-            Answers_Market::note_suppressed();
-            return '';
-        }
-
         $api_url = get_option( 'answers_api_url', ANSWERS_DEFAULT_API_URL );
 
         if ( ! empty( $api_url ) ) {
@@ -107,6 +99,25 @@ class Answers_Data_Provider {
         $url = trailingslashit( $api_url ) . urlencode( $feed_id );
         $url = add_query_arg( self::build_query_args( $options ), $url );
 
+        // WHAT this request is for, so the platform can decide WHICH content it
+        // gets: the market WordPress resolved and the page being rendered. Both
+        // are inert against today's API, which ignores unknown parameters, and
+        // both are what lets a second language ship later with no plugin update
+        // on anyone's site. They are part of the cache key by construction,
+        // since the key is the full request URL.
+        $market = Answers_Market::current();
+        $context = [];
+        if ( $market['market'] !== '' ) {
+            $context['market'] = $market['market'];
+        }
+        $page_url = self::current_page_url();
+        if ( $page_url !== '' ) {
+            $context['pageUrl'] = $page_url;
+        }
+        if ( ! empty( $context ) ) {
+            $url = add_query_arg( $context, $url );
+        }
+
         // A TTL of 0 (or less) means "don't cache" — fetch fresh every time.
         // (WordPress treats set_transient( …, 0 ) as *never expire*, which
         // would otherwise pin stale HTML in place after a re-publish.)
@@ -163,12 +174,38 @@ class Answers_Data_Provider {
         }
 
         $html = $decoded['html'];
+        $meta = isset( $decoded['meta'] ) && is_array( $decoded['meta'] ) ? $decoded['meta'] : [];
+
+        // THE market gate, and the only place it can honestly live: the answer
+        // is a property of the fragment we were sent, not of anything this site
+        // is configured with. Every render path (content filter, product tab,
+        // shortcode, both page builders) arrives here, so one decision covers
+        // all of them.
+        if ( ! Answers_Market::may_render( $meta, $html ) ) {
+            $html = '';
+        }
 
         if ( $cache_enabled ) {
             set_transient( $cache_key, $html, $ttl );
         }
 
         return $html;
+    }
+
+    /**
+     * The URL being rendered, absolute, without a query string. Sent as context
+     * so the platform can resolve a market for sites whose language lives only
+     * in their URLs, with the tenant's configuration in front of it.
+     */
+    private static function current_page_url(): string {
+        $host = isset( $_SERVER['HTTP_HOST'] ) ? (string) wp_unslash( $_SERVER['HTTP_HOST'] ) : '';
+        $uri  = isset( $_SERVER['REQUEST_URI'] ) ? (string) wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
+        if ( $host === '' || $uri === '' ) {
+            return '';
+        }
+        $path = (string) wp_parse_url( $uri, PHP_URL_PATH );
+        $scheme = is_ssl() ? 'https' : 'http';
+        return $scheme . '://' . $host . $path;
     }
 
     /**

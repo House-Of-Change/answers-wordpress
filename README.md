@@ -149,46 +149,33 @@ anyone deciding to: TranslatePress, WPML and Polylang commonly render **one** po
 at several language URLs, so a block placed once appears in every language and
 cannot be removed from a page that does not exist as a post.
 
-`Answers_Market` resolves the current market and `Answers_Data_Provider` consults
-it at the single point every render path funnels through (content filter, product
-tab, shortcode, Elementor, WPBakery).
+**The split.** The plugin detects a fact and sends it; the platform holds every
+policy. There are deliberately **no market settings in WordPress**: we may not have
+admin access to a client's site, and a setting a client has to find is a setting
+that delays their pages being right.
 
-**Resolution ladder** (first hit wins):
-
-1. TranslatePress (`trp_get_current_language()`, else `$TRP_LANGUAGE`)
-2. WPML (`wpml_current_language` filter, else `ICL_LANGUAGE_CODE`)
-3. Polylang (`pll_current_language( 'locale' )`)
-4. URL prefix or subdomain, **only** for prefixes declared in settings
-5. WordPress `determine_locale()`
-6. Nothing detected → treated as the base market
+- The plugin resolves the current market (TranslatePress → WPML → Polylang →
+  `determine_locale()`) and sends it with every feed request as `market`, together
+  with `pageUrl`.
+- The platform decides which feed that market gets. Today's API ignores both
+  parameters, so a second language can ship later with **no plugin update on any
+  client site**.
+- The plugin holds one rule it cannot delegate, because it is about the response
+  in its hand: render the fragment unless the fragment says it belongs to a market
+  that is not this one. The signal is `meta.market` when the platform sends it
+  (`"*"` means "safe in any market"), else the `inLanguage` in the fragment's own
+  JSON-LD.
 
 Two rules worth knowing before changing this:
 
-- **Unknown is not "other".** A request we cannot place is almost always the
-  ordinary single-language rendering of an ordinary site, so it renders. Only a
-  positively identified foreign market can be suppressed. The opposite default
-  would black out every plain WordPress install.
+- **Unknown is not "other".** An unplaceable request, or a fragment that declares
+  no market, renders. Only a positive mismatch withholds anything, so no
+  single-language site changed behaviour when this shipped and no client's pages
+  depend on a field the platform may not be sending yet.
 - **URLs are never guessed at.** `/it/` is Italian on one site and IT services on
-  another, and guessing wrong deletes a block from a page that was fine. So URL
-  detection matches only the prefixes a publisher declared under
-  *Language URL prefixes*.
-
-**The base market is NOT `get_locale()`.** Every translation plugin filters
-`locale` to the current request's language, so on the sites this exists for
-`get_locale()` returns `nl_NL` while serving the Dutch rendering of German
-content. Base is resolved as: the explicit setting → TranslatePress
-`trp_settings['default-language']` → WPML `wpml_default_language` → Polylang
-`pll_default_language( 'locale' )` → the raw `WPLANG` option → `get_locale()`.
-Skip that and the gate looks configured while comparing a value against itself.
-
-**Settings** (Settings > info.link/answers, "Languages and markets"): content
-language (defaults to the ladder above), behaviour on other languages
-(`none`, the default, or `base`), and the optional URL prefixes.
-
-**Knowing what a client runs.** Every API fetch sends
-`X-Answers-Plugin: <version>`, because the stylesheet's `?ver=` query string is
-the only other remote signal and caching plugins strip it (on two of four live
-installs it is already gone).
+  another, and guessing wrong withholds a block from a page that was fine. The
+  page URL is sent to the platform instead, which resolves it with that tenant's
+  configuration in front of it.
 
 **Filters:**
 
@@ -197,17 +184,20 @@ installs it is already gone).
 // have not met). Return '' for "unknown", which renders.
 add_filter( 'answers_current_market', fn( $market, $source ) => 'nl-NL', 10, 2 );
 
-// Map a placement to a different feed. This is where a per-market feed map
-// belongs: same post, market-specific feed. Return '' to render nothing.
+// Map a placement to a different feed. Return '' to render nothing.
 add_filter( 'answers_feed_id', function ( $feed_id, $market ) {
     return $market === 'nl-NL' ? 'the-dutch-feed-id' : $feed_id;
 }, 10, 2 );
 ```
 
-When a block is withheld, the footer carries an HTML comment naming the market it
-withheld from, how that market was detected, and the base market. That comment is
-the fastest answer to "where did my FAQ go", and it makes the policy verifiable
-with `curl` instead of a screen share.
+When a fragment is withheld, the footer carries an HTML comment naming the market
+of the request, how it was detected, and the market the content was for. That is
+the fastest answer to "where did my FAQ go", and it makes the behaviour verifiable
+with `curl` rather than a screen share.
+
+**Knowing what a client runs.** Every API fetch sends `X-Answers-Plugin: <version>`,
+because the stylesheet's `?ver=` query string is the only other remote signal and
+caching plugins strip it (on two of four live installs it is already gone).
 
 **Verifying a change here.** The pure logic has a harness that needs neither
 WordPress nor Docker:
@@ -217,9 +207,9 @@ php tests/market-logic-test.php
 ```
 
 End to end, use the Docker environment with a translation plugin installed
-(TranslatePress is the one this was built against), assign a feed to a page, then
-`curl` the base-language URL and a translated URL: the first carries the block,
-the second carries the footer comment and no block.
+(TranslatePress is the one this was built against): assign a feed to a page, then
+`curl` the base-language URL and a translated URL. The first carries the block, the
+second carries the footer comment and no block.
 
 ## Releasing & Client Distribution
 

@@ -23,10 +23,8 @@ class Answers_Hooks {
         );
 
         if ( is_singular() ) {
-            // Only when a block will actually render: a suppressed market
-            // must not pull in a stylesheet for markup that is not there.
             $feed_id = Answers_Feed::resolve();
-            if ( ! empty( $feed_id ) && Answers_Market::may_render() ) {
+            if ( ! empty( $feed_id ) ) {
                 wp_enqueue_style( 'answers-style' );
             }
         }
@@ -111,13 +109,6 @@ class Answers_Hooks {
 
         $feed_id = Answers_Feed::resolve();
         if ( empty( $feed_id ) ) {
-            return;
-        }
-
-        // The market gate applies to the head graph too: structured data for a
-        // market this feed was not written for is the half of the problem a
-        // reader cannot see.
-        if ( ! Answers_Market::may_render() ) {
             return;
         }
 
