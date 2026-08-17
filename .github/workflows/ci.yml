@@ -1,0 +1,31 @@
+name: CI
+
+# Two cheap checks that used to have no home: does every PHP file parse, and
+# does market resolution still decide what we think it decides. The release
+# workflow ships a zip on every push to main, so "it parses" should not be
+# something a client's site discovers for us.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  php:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - name: Lint every PHP file (plugin code and tests, not vendor)
+        run: |
+          find plugin tests -name '*.php' -not -path '*/vendor/*' -print0 \
+            | xargs -0 -n1 -P4 php -l
+
+      - name: Market resolution logic
+        run: php tests/market-logic-test.php

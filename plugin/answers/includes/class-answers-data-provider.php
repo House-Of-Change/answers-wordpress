@@ -26,6 +26,14 @@ class Answers_Data_Provider {
      *                        absent defers to the published default preset.
      */
     public static function get_faq_html( string $feed_id, array $options = [] ): string {
+        // THE choke point for the market gate: the content filter, the product
+        // tab, the shortcode and both page-builder elements all arrive here, so
+        // a market decision made once cannot be missed by one of them.
+        if ( ! Answers_Market::may_render() ) {
+            Answers_Market::note_suppressed();
+            return '';
+        }
+
         $api_url = get_option( 'answers_api_url', ANSWERS_DEFAULT_API_URL );
 
         if ( ! empty( $api_url ) ) {
