@@ -71,10 +71,15 @@ function reset_request( array $options = [], string $locale = 'de_DE', string $u
     $_SERVER['REQUEST_URI']  = $uri;
     $_SERVER['HTTP_HOST']    = $host;
 
-    // The class memoises resolution per request; a test IS a new request.
-    $reset = new ReflectionProperty( 'Answers_Market', 'resolved' );
-    $reset->setAccessible( true );
-    $reset->setValue( null, null );
+    // A test IS a new request, and in production every request is a new PHP
+    // process: the memoised market AND the withheld-placement counter both
+    // start empty. Resetting only the first one made two diagnostic checks
+    // depend on how many mismatches earlier checks had accumulated.
+    foreach ( [ 'resolved' => null, 'suppressed' => 0, 'withheld_from' => '' ] as $prop => $value ) {
+        $reset = new ReflectionProperty( 'Answers_Market', $prop );
+        $reset->setAccessible( true );
+        $reset->setValue( null, $value );
+    }
 }
 
 function check( string $desc, $expected, $actual ): void {
