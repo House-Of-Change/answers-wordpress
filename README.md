@@ -157,9 +157,9 @@ that delays their pages being right.
 - The plugin resolves the current market (TranslatePress → WPML → Polylang →
   `determine_locale()`) and sends it with every feed request as `market`, together
   with `pageUrl`.
-- The platform decides which feed that market gets. Today's API ignores both
-  parameters, so a second language can ship later with **no plugin update on any
-  client site**.
+- The platform decides which feed that market gets. It reads `market` and stamps
+  `meta.market` on the response (since 2026-08-24); `pageUrl` is still inert, so a
+  second language can ship later with **no plugin update on any client site**.
 - The plugin holds one rule it cannot delegate, because it is about the response
   in its hand: render the fragment unless the fragment says it belongs to a market
   that is not this one. The signal is `meta.market` when the platform sends it
@@ -169,9 +169,18 @@ that delays their pages being right.
 Two rules worth knowing before changing this:
 
 - **Unknown is not "other".** An unplaceable request, or a fragment that declares
-  no market, renders. Only a positive mismatch withholds anything, so no
-  single-language site changed behaviour when this shipped and no client's pages
-  depend on a field the platform may not be sending yet.
+  no market, renders. Only a positive mismatch withholds anything, so no client's
+  pages depend on a field the platform may not be sending yet.
+- **Inferred is not "declared" either.** Both signals have an inferred fallback:
+  the request market from bare `determine_locale()`, which on a plain install is
+  the site's configured language, and the fragment market from `inLanguage`, which
+  is the language the content is written in. Neither says anything about markets,
+  and comparing the two produced a confident mismatch nobody asserted. **That is
+  what the "no single-language site changed behaviour" claim above got wrong when
+  this first shipped**: an English site on a German WordPress install lost every
+  FAQ block on three live pages for seven days. So withholding needs one real
+  declaration — `meta.market`, or a request market from a translation layer or an
+  explicit `answers_current_market` filter.
 - **URLs are never guessed at.** `/it/` is Italian on one site and IT services on
   another, and guessing wrong withholds a block from a page that was fine. The
   page URL is sent to the platform instead, which resolves it with that tenant's

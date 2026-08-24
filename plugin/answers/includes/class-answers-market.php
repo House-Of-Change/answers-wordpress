@@ -33,6 +33,25 @@
  * else would black out every single-language site the moment this shipped, and
  * would make a client's pages depend on a field the platform may not be sending
  * yet. Only a positive mismatch withholds anything.
+ *
+ * AND "INFERRED" IS NOT "DECLARED" EITHER (SIT-12, added 2026-08-24). The rule
+ * above was right and the first implementation did not hold it. Both of the
+ * signals it compares have an inferred fallback: the request market can come from
+ * bare determine_locale(), which on a plain install is the site's configured
+ * language, and the fragment market can come from JSON-LD inLanguage, which is
+ * the language the content is WRITTEN IN. Neither is a statement about markets.
+ * Put the two together and you get a confident mismatch nobody asserted.
+ *
+ * That is not a hypothetical either: it took every FAQ block off three of a
+ * client's live pages for seven days. An English site on a German WordPress
+ * install, so determine_locale() said de-DE while the correct English fragment
+ * said en, and nothing on either side was misconfigured. No check on either side
+ * reported it; a human noticed the pages were empty.
+ *
+ * So withholding now requires at least one real declaration: `meta.market` from
+ * the platform, or a request market resolved by a translation layer or an
+ * explicit filter. A German fragment on a Dutch TranslatePress rendering is still
+ * withheld, which is the case this class was written for.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -93,8 +112,9 @@ class Answers_Market {
             return true;
         }
 
-        $ours   = self::current()['market'];
-        $theirs = self::market_of( $meta, $html );
+        $resolved = self::current();
+        $ours     = $resolved['market'];
+        $theirs   = self::market_of( $meta, $html );
 
         if ( $ours === '' || $theirs === '' ) {
             return true; // unknown on either side renders — see the file header.
@@ -103,9 +123,68 @@ class Answers_Market {
             return true;
         }
 
+        // BOTH SIDES INFERRED IS NOT A MISMATCH ANYONE DECLARED. (SIT-12)
+        //
+        // The file header states the rule this class is meant to hold: render
+        // unless the fragment SAYS it belongs to a market that is not this one.
+        // Saying so means `meta.market`. The JSON-LD `inLanguage` fallback in
+        // market_of() is not the fragment saying anything about markets: it is
+        // the language the content is written in, which is a different question.
+        //
+        // And on the request side, a market from bare determine_locale() on a
+        // plain install is the CMS's configured language, not a statement about
+        // the page. A translation layer filters determine_locale() per request,
+        // which is why the ladder trusts it AT ALL — but when no layer is
+        // present nothing has been declared.
+        //
+        // Put those two inferences together and you get a confident-looking
+        // mismatch that nobody asserted. It cost a client every FAQ block on
+        // three live pages for seven days: an English site on a German
+        // WordPress install, so determine_locale() said de-DE while the correct
+        // English fragment said en. Nothing on either side was misconfigured.
+        //
+        // So a withholding now needs at least one real declaration. Guhl, the
+        // case phase 0 was built for, is unaffected: TranslatePress resolves its
+        // Dutch rendering, which is a declared source, so a German fragment on a
+        // Dutch page is still withheld with or without meta.market.
+        if ( ! self::fragment_declares_market( $meta ) && ! self::is_declared_source( $resolved['source'] ) ) {
+            return true;
+        }
+
         self::$suppressed++;
         self::$withheld_from = $theirs;
         return false;
+    }
+
+    /**
+     * Did the PLATFORM name this fragment's market, rather than us inferring it
+     * from the content's language?
+     *
+     * `meta.market` is that statement. A wildcard ("*") never reaches here:
+     * market_of() maps it to '' and may_render() has already returned true.
+     */
+    private static function fragment_declares_market( array $meta ): bool {
+        return isset( $meta['market'] )
+            && is_string( $meta['market'] )
+            && self::normalise( $meta['market'] ) !== '';
+    }
+
+    /**
+     * Is this detection source a DECLARATION of the request's market, rather
+     * than an inference from how the site happens to be configured?
+     *
+     * A translation layer is: it exists because the publisher runs several
+     * languages and it names the one being rendered. An explicit
+     * `answers_current_market` filter is, by definition. WordPress core's
+     * determine_locale() is NOT, on its own — it is the site language, and on a
+     * single-language site it says nothing about the market of the content.
+     *
+     * Note the asymmetry, which is deliberate: an UNDECLARED source still
+     * matches happily (a German fragment on a German install renders), it just
+     * cannot be the sole grounds for taking content away.
+     */
+    private static function is_declared_source( string $source ): bool {
+        return in_array( $source, [ 'translatepress', 'wpml', 'polylang', 'filter' ], true );
     }
 
     /**

@@ -22,6 +22,7 @@ $GLOBALS['stub_locale']  = 'de_DE';
 $GLOBALS['stub_admin']   = false;
 $GLOBALS['stub_post_id'] = 0;
 $GLOBALS['stub_meta']    = [];
+$GLOBALS['stub_polylang'] = '';
 
 function get_option( $name, $default = false ) {
     return $GLOBALS['stub_options'][ $name ] ?? $default;
@@ -55,6 +56,13 @@ function get_the_ID() {
 function get_post_meta( $post_id, $key, $single = false ) {
     return $GLOBALS['stub_meta'][ $post_id ][ $key ] ?? '';
 }
+// A translation layer, switchable per test. Polylang is the cheapest of the three
+// to stub: its hook is a plain function rather than a filter or a global, and the
+// ladder reaches it before WordPress core. Empty means "not installed" — the
+// normalise('') in detect() then falls through to determine_locale().
+function pll_current_language( $format = 'locale' ) {
+    return $GLOBALS['stub_polylang'] ?? '';
+}
 function wp_parse_url( $url, $component = -1 ) {
     return $component === -1 ? parse_url( $url ) : parse_url( $url, $component );
 }
@@ -68,6 +76,9 @@ $checks   = 0;
 function reset_request( array $options = [], string $locale = 'de_DE', string $uri = '/produkt/x/', string $host = 'example.com' ): void {
     $GLOBALS['stub_options'] = $options;
     $GLOBALS['stub_locale']  = $locale;
+    // Off unless a test turns it on: most tests are a plain single-language
+    // install, which is the population the SIT-12 rule protects.
+    $GLOBALS['stub_polylang'] = '';
     $_SERVER['REQUEST_URI']  = $uri;
     $_SERVER['HTTP_HOST']    = $host;
 
@@ -133,8 +144,65 @@ check( 'a fragment that declares nothing is unknown', '', Answers_Market::market
 reset_request( [], 'de_DE' );
 check( 'German request, German fragment: renders', true, Answers_Market::may_render( [], $de_fragment ) );
 
+// SIT-12: this used to assert `false`, and that was the defect. Both sides are
+// inferred here — the request market from bare determine_locale() on a plain
+// install, the fragment market from its inLanguage — so nothing has DECLARED a
+// mismatch and taking the content away is a guess.
 reset_request( [], 'nl_NL' );
-check( 'Dutch request, German fragment: withheld', false, Answers_Market::may_render( [], $de_fragment ) );
+check(
+    'plain install, market inferred both sides: renders (nothing was declared)',
+    true,
+    Answers_Market::may_render( [], $de_fragment )
+);
+
+// The same request, once the PLATFORM names the fragment's market. Now there is
+// a real declaration on one side, so the mismatch is real and withholding is
+// right. This is the path every tenant takes once meta.market ships.
+reset_request( [], 'nl_NL' );
+check(
+    'platform declares the fragment German: withheld on a Dutch page',
+    false,
+    Answers_Market::may_render( [ 'market' => 'de' ], $de_fragment )
+);
+
+// And the same request with a translation layer resolving it, which is the Guhl
+// case phase 0 was built for: declared on the REQUEST side, so inLanguage alone
+// is enough and no meta.market is needed. This must not regress.
+reset_request( [], 'de_DE' );
+$GLOBALS['stub_polylang'] = 'nl_NL';
+check(
+    'translation layer resolves Dutch, German fragment: withheld (the Guhl leak)',
+    false,
+    Answers_Market::may_render( [], $de_fragment )
+);
+
+// The bug, as a test. English content on a German WordPress install: the client
+// is single-market, nothing is misconfigured, and every block disappeared.
+reset_request( [], 'de_DE' );
+$en_fragment = str_replace( '"de"', '"en"', $de_fragment );
+check(
+    'SIT-12: English fragment on a German install renders',
+    true,
+    Answers_Market::may_render( [], $en_fragment )
+);
+
+// ...and the platform can still say otherwise, which is the point of moving the
+// policy there: a declared `en` against a de-DE request is withheld, and the
+// operator fixes it with variantFallback rather than a plugin release.
+reset_request( [], 'de_DE' );
+check(
+    'SIT-12: a DECLARED en fragment is still withheld on a de-DE request',
+    false,
+    Answers_Market::may_render( [ 'market' => 'en' ], $en_fragment )
+);
+
+// The wildcard is how variantFallback: "base" reaches the plugin.
+reset_request( [], 'de_DE' );
+check(
+    'SIT-12: variantFallback base arrives as "*" and renders',
+    true,
+    Answers_Market::may_render( [ 'market' => '*' ], $en_fragment )
+);
 
 reset_request( [], 'nl_NL' );
 check( 'Dutch request, Dutch fragment: renders', true, Answers_Market::may_render( [ 'market' => 'nl-NL' ], $de_fragment ) );
@@ -160,9 +228,12 @@ ob_start();
 Answers_Market::render_diagnostic();
 check( 'nothing withheld yet, nothing to explain', '', ob_get_clean() );
 
+// Declared on the fragment side, so these two are genuine withholdings under the
+// SIT-12 rule; before it, an inferred pair was enough and this block passed for
+// the wrong reason.
 reset_request( [], 'nl_NL' );
-Answers_Market::may_render( [], $de_fragment );
-Answers_Market::may_render( [], $de_fragment );
+Answers_Market::may_render( [ 'market' => 'de' ], $de_fragment );
+Answers_Market::may_render( [ 'market' => 'de' ], $de_fragment );
 ob_start();
 Answers_Market::render_diagnostic();
 $comment = ob_get_clean();
