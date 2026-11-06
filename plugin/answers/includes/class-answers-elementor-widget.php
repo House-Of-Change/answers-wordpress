@@ -39,7 +39,11 @@ class Answers_Elementor_Widget extends \Elementor\Widget_Base {
             'label' => __( 'info.link/answers', 'answers' ),
         ] );
 
-        $this->add_control( 'id', [
+        // Not `id`: Elementor keeps a widget's settings in a Backbone model, and
+        // Backbone reads an `id` attribute as "saved on a server", so deleting
+        // the widget tried a DELETE request and threw; the widget, and the
+        // section around it, could not be removed in the editor.
+        $this->add_control( 'feed_id', [
             'label'       => __( 'Feed ID', 'answers' ),
             'type'        => \Elementor\Controls_Manager::TEXT,
             'label_block' => true,
@@ -98,8 +102,28 @@ class Answers_Elementor_Widget extends \Elementor\Widget_Base {
         $this->end_controls_section();
     }
 
+    /**
+     * Widgets saved before the rename carry their feed under `id`. Hand the
+     * editor `feed_id` instead, so a saved widget becomes deletable as soon as
+     * the page is opened, with no change to what it renders.
+     */
+    public function get_raw_data( $with_html_content = false ) {
+        $data = parent::get_raw_data( $with_html_content );
+        if ( isset( $data['settings'] ) && is_array( $data['settings'] ) && array_key_exists( 'id', $data['settings'] ) ) {
+            if ( empty( $data['settings']['feed_id'] ) ) {
+                $data['settings']['feed_id'] = $data['settings']['id'];
+            }
+            unset( $data['settings']['id'] );
+        }
+        return $data;
+    }
+
     protected function render(): void {
         $settings = $this->get_settings_for_display();
+        if ( empty( $settings['feed_id'] ) && ! empty( $settings['id'] ) ) {
+            $settings['feed_id'] = $settings['id'];
+        }
+        $settings['id'] = $settings['feed_id'] ?? '';
 
         $atts = '';
         foreach ( [ 'id', 'slug', 'variant', 'styling', 'heading_level', 'hide' ] as $key ) {
